@@ -1,17 +1,32 @@
 #!/usr/bin/env zsh
 
-echo "Installing oh-my-zsh"
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+DIR="$( echo "$( dirname "$0" )" && pwd )"
 
-echo "Installing x-code CLI tools"
-xcode-select --install
+if [[ $SHELL != *"zsh"* ]]; 
+then
+  echo "Installing oh-my-zsh"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+fi
 
-echo "Installing Homebrew"
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+xcode-select -p > /dev/null
+if [ $? -ne 0 ]; 
+then
+  echo "Installing xcode CLI tools"
+  xcode-select --install
+fi
 
-echo "Installing Vim-Plug"
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+if ! command -v brew > /dev/null;
+then
+  echo "Installing Homebrew"
+  #/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+
+if [ ! -f ~/.vim/autoload/plug.vim ];
+then
+  echo "Installing Vim-Plug"
+  curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+fi
 
 echo "Linking files"
 mkdir -p  ~/.dotfiles_backup
@@ -22,7 +37,7 @@ do
     echo "Original file exists, backing it up"
     mv ~/.$f ~/.dotfiles_backup/$f
   fi
-  ln -s $f ~/.$f
+  ln -s ~/.dotfiles/$f ~/.$f
   echo "Linked \"$f\""
 done
 
