@@ -43,6 +43,7 @@ done
 
 # Install vim plugins
 echo "Configuring VIM"
+brew install vim --with-lua
 vim +PlugInstall +qall
 
 echo "Done configuring the system, please reboot :D"
