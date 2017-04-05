@@ -34,7 +34,10 @@ do
   echo "Linked \"$f\""
 done
 
-# Install vimi + plugins
+echo "Installing zsh-syntax-highlighting"
+brew install zsh-syntax-highlighting
+
+# Install vim + plugins
 brew install vim --with-lua
 
 if [ ! -f ~/.vim/autoload/plug.vim ];
