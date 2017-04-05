@@ -21,13 +21,6 @@ then
   #/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
-if [ ! -f ~/.vim/autoload/plug.vim ];
-then
-  echo "Installing Vim-Plug"
-  curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-fi
-
 echo "Linking files"
 mkdir -p  ~/.dotfiles_backup
 for f in "aliases" "exports" "functions" "vimrc" "zshrc"
@@ -41,9 +34,17 @@ do
   echo "Linked \"$f\""
 done
 
-# Install vim plugins
-echo "Configuring VIM"
+# Install vimi + plugins
 brew install vim --with-lua
+
+if [ ! -f ~/.vim/autoload/plug.vim ];
+then
+  echo "Installing Vim-Plug"
+  curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+fi
+
+echo "Configuring VIM"
 vim +PlugInstall +qall
 
 echo "Done configuring the system, please reboot :D"
