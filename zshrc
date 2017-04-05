@@ -1,11 +1,13 @@
 # Path to your oh-my-zsh installation.
-export ZSH=/Users/gustavo.hoirisch/.oh-my-zsh
+export ZSH=~/.oh-my-zsh
 
 # Set name of the theme to load.
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
-ZSH_THEME=""
+
+# https://github.com/sindresorhus/pure.git
+ZSH_THEME="pure"  
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -49,7 +51,7 @@ ZSH_THEME=""
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git docker ssh-agent z)
+plugins=(git docker z pure)
 
 # User configuration
 
@@ -63,11 +65,6 @@ export GOPATH=~/.go
 export PATH="$PATH:$GOPATH/bin" 
 
 ## AWS auto completion
-source /usr/local/share/zsh/site-functions/_aws
+#source /usr/local/share/zsh/site-functions/_aws
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
-# https://github.com/sindresorhus/pure.git
-autoload -U promptinit; promptinit
-prompt pure
-
