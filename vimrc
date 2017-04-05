@@ -14,6 +14,8 @@ call plug#end()
 
 " Auto Start NerdTREE
 autocmd vimenter * NERDTree
+" Go to document window
+autocmd VimEnter * wincmd p
 
 " Auto Start Neocomplete
 let g:neocomplete#enable_at_startup = 1
