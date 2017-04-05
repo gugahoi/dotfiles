@@ -60,6 +60,10 @@ export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 source $ZSH/oh-my-zsh.sh
 
+source ~/.exports
+source ~/.aliases
+source ~/.functions
+
 # GOPATH
 export GOPATH=~/.go
 export PATH="$PATH:$GOPATH/bin" 
