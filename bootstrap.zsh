@@ -50,4 +50,6 @@ fi
 echo "Configuring VIM"
 vim +PlugInstall +qall
 
+brew install tig icdiff
+
 echo "Done configuring the system, please reboot :D"
