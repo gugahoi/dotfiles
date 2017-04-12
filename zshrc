@@ -7,7 +7,7 @@ export ZSH=~/.oh-my-zsh
 # time that oh-my-zsh is loaded.
 
 # https://github.com/sindresorhus/pure.git
-ZSH_THEME="pure"  
+ZSH_THEME="refined"  
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
