@@ -60,9 +60,13 @@ export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 source $ZSH/oh-my-zsh.sh
 
+<<<<<<< Updated upstream
 source ~/.exports
 source ~/.aliases
 source ~/.functions
+=======
+source ~/.{aliases,functions,exports}
+>>>>>>> Stashed changes
 
 # GOPATH
 export GOPATH=~/.go
@@ -73,3 +77,9 @@ export PATH="$PATH:$GOPATH/bin"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# https://github.com/sindresorhus/pure.git
+autoload -U promptinit; promptinit
+prompt pure
+
+source <(kubectl completion zsh)
