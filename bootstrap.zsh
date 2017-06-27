@@ -52,4 +52,6 @@ vim +PlugInstall +qall
 
 brew install tig icdiff
 
+git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
+
 echo "Done configuring the system, please reboot :D"
