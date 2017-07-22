@@ -72,7 +72,8 @@ export PATH="$PATH:$GOPATH/bin"
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # https://github.com/sindresorhus/pure.git
-autoload -U promptinit; promptinit
+autoload -Uz promptinit
+promptinit
 prompt pure
 
 # The next line updates PATH for the Google Cloud SDK.

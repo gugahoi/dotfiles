@@ -52,6 +52,12 @@ vim +PlugInstall +qall
 
 brew install tig icdiff
 
+echo "Installing ZSH Pure Theme"
+git clone https://github.com/sindresorhus/pure ~/.zsh-pure-theme/
+ln -s ~/.zsh-pure-theme/pure.zsh /usr/local/share/zsh/site-functions/prompt_pure_setup
+ln -s ~/.zsh-pure-theme/async.zsh /usr/local/share/zsh/site-functions/async
+
+echo "Installing zsh-autosuggestions"
 git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
 
 echo "Done configuring the system, please reboot :D"
