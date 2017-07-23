@@ -83,4 +83,4 @@ if [ -f '/usr/local/bin/google-cloud-sdk/path.zsh.inc' ]; then source '/usr/loca
 if [ -f '/usr/local/bin/google-cloud-sdk/completion.zsh.inc' ]; then source '/usr/local/bin/google-cloud-sdk/completion.zsh.inc'; fi
 
 source <(kubectl completion zsh)
-
+source <(kops completion zsh)
