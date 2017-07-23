@@ -186,6 +186,6 @@ alias auth-cluster-prod='myob-auth login --username gustavo.hoirisch --role adfs
 alias auth-cluster-preprod='myob-auth login --username gustavo.hoirisch --role adfs-ex-cluster-preprod-admin'
 
 # kubectl
-alias kube-dev='kubectl --kubeconfig ~/.kube/dev-config'
-alias kube-preprod='kubectl --kubeconfig ~/.kube/preprod-config'
-alias kube-prod='kubectl --kubeconfig ~/.kube/prod-config'
+alias kb-dev='kubectl --kubeconfig ~/.kube/dev-config'
+alias kb-preprod='kubectl --kubeconfig ~/.kube/preprod-config'
+alias kb-prod='kubectl --kubeconfig ~/.kube/prod-config'
