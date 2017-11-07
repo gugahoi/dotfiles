@@ -1,6 +1,4 @@
-#!/usr/bin/env zsh
-
-DIR="$( echo "$( dirname "$0" )" && pwd )"
+#!/usr/bin/env bash
 
 if [[ $SHELL != *"zsh"* ]]; 
 then
@@ -8,17 +6,14 @@ then
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 fi
 
-xcode-select -p > /dev/null
-if [ $? -ne 0 ]; 
-then
+if ! xcode-select -p > /dev/null; then
   echo "Installing xcode CLI tools"
   xcode-select --install
 fi
 
-if ! command -v brew > /dev/null;
-then
+if ! command -v brew > /dev/null; then
   echo "Installing Homebrew"
-  #/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
 echo "Linking files"
@@ -34,11 +29,32 @@ do
   echo "Linked \"$f\""
 done
 
-echo "Installing zsh-syntax-highlighting"
-brew install zsh-syntax-highlighting
-
-# Install vim + plugins
-brew install vim --with-lua
+# brew installs
+software_list=( bash tig icdiff vim zsh-syntax-highlighting \
+  zsh-autosuggestions python3 )
+for item in "${software_list[@]}"; do
+  if ! brew list | grep -q "$item"; then
+    echo "Installing fresh $item"
+    brew install "$item"
+    # add comment and 'source' cmd only if it was not already in zshrc file
+    if [ "$item" == "zsh-autosuggestions" ] && ! grep -q "# adding zsh-autosuggestions.zsh" "zshrc" ; then
+      echo "Also adding source to zshrc file..."
+      printf "\
+        \n\n# adding zsh-autosuggestions.zsh \
+        \nsource /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh" >> zshrc
+    fi
+    # add comment and 'source' cmd only if it was not already in zshrc file
+    if [ "$item" == "zsh-syntax-highlighting" ] && ! grep -q "# adding zsh-syntax-highlighting.zsh" "zshrc" ; then
+      echo "Also adding syntax-highlighting source to zshrc file..."
+      printf "\
+        \n\n# adding zsh-syntax-highlighting.zsh \
+        \nsource /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> zshrc
+    fi
+  else
+    echo "upgrading $item"
+    brew upgrade "$item" 2>/dev/null
+  fi
+done
 
 if [ ! -f ~/.vim/autoload/plug.vim ];
 then
@@ -50,14 +66,9 @@ fi
 echo "Configuring VIM"
 vim +PlugInstall +qall
 
-brew install tig icdiff
-
 echo "Installing ZSH Pure Theme"
 git clone https://github.com/sindresorhus/pure ~/.zsh-pure-theme/
 ln -s ~/.zsh-pure-theme/pure.zsh /usr/local/share/zsh/site-functions/prompt_pure_setup
 ln -s ~/.zsh-pure-theme/async.zsh /usr/local/share/zsh/site-functions/async
-
-echo "Installing zsh-autosuggestions"
-git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
 
 echo "Done configuring the system, please reboot :D"
