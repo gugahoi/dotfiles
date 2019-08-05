@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-if [[ $SHELL != *"zsh"* ]]; 
-then
-  echo "Installing oh-my-zsh"
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-fi
-
 if ! xcode-select -p > /dev/null; then
   echo "Installing xcode CLI tools"
   xcode-select --install
@@ -30,8 +24,7 @@ do
 done
 
 # brew installs
-software_list=( bash tig icdiff vim zsh-syntax-highlighting \
-  zsh-autosuggestions python3 )
+software_list=( bash tig icdiff vim )
 for item in "${software_list[@]}"; do
   if ! brew list | grep -q "$item"; then
     echo "Installing fresh $item"
@@ -65,10 +58,5 @@ fi
 
 echo "Configuring VIM"
 vim +PlugInstall +qall
-
-echo "Installing ZSH Pure Theme"
-git clone https://github.com/sindresorhus/pure ~/.zsh-pure-theme/
-ln -s ~/.zsh-pure-theme/pure.zsh /usr/local/share/zsh/site-functions/prompt_pure_setup
-ln -s ~/.zsh-pure-theme/async.zsh /usr/local/share/zsh/site-functions/async
 
 echo "Done configuring the system, please reboot :D"
