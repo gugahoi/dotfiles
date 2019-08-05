@@ -9,11 +9,13 @@ Plug 'shougo/neocomplete.vim'
 Plug 'majutsushi/tagbar'
 Plug 'SirVer/ultisnips'
 Plug 'ctrlpvim/ctrlp.vim'
+Plug 'vim-airline/vim-airline'
 
 call plug#end()
 
 " Auto Start NerdTREE
-autocmd vimenter * NERDTree
+" autocmd vimenter * NERDTree
+nmap <F6> :NERDTreeToggle<CR>
 " Go to document window
 autocmd VimEnter * wincmd p
 
@@ -21,7 +23,7 @@ autocmd VimEnter * wincmd p
 let g:neocomplete#enable_at_startup = 1
 
 " TagbarToggle
-nmap <F6> :TagbarToggle<CR>
+nmap <F8> :TagbarToggle<CR>
 
 " Go Keybinding
 " Tests
@@ -64,7 +66,9 @@ set completeopt-=preview
 set expandtab
 set autoindent
 set smartindent
-set tabstop=4
+set tabstop=2
 set softtabstop=2
 set shiftwidth=2
-
+highligh ColorColumn ctermfg=1 ctermbg=NONE
+autocmd BufRead,BufNewFile *.md setlocal textwidth=80
+let &colorcolumn=join(range(80,999),",")
