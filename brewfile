@@ -33,6 +33,7 @@ brew "z"
 
 tap "homebrew/cask"
 cask "amethyst"
+cask "bettertouchtool"
 cask "firefox"
 cask "google-cloud-sdk"
 cask "iterm2"
