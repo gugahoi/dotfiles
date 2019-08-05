@@ -1,5 +1,7 @@
 brew "asciinema"
 brew "bash-completion"
+brew "bash"
+brew "bash-git-prompt"
 brew "bat"
 brew "buffalo"
 brew "fzf"
