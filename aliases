@@ -179,3 +179,16 @@ alias dcr='docker-compose run --rm'
 alias dcb='docker-compose build'
 alias dcu='docker-compose up'
 
+# Git shortcuts
+alias git='hub'
+alias gst='git status'
+alias gitup='git checkout master && git pull && git checkout -'
+
+command -v bat >/dev/null && alias cat='bat'
+
+# Kubernetes aliases
+alias kpo='kubectl get pods'
+alias kpow='watch kubectl get pods'
+alias k='kubectl'
+alias kns='kubens'
+alias kcts='kubectx'
