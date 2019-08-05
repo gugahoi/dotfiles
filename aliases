@@ -179,13 +179,3 @@ alias dcr='docker-compose run --rm'
 alias dcb='docker-compose build'
 alias dcu='docker-compose up'
 
-# myob-auth
-alias auth-central-prod='myob-auth login --username `whoami` --role adfs-ex-central-production-poweruser'
-alias auth-central-dev='myob-auth login --username `whoami` --role adfs-ex-central-development-poweruser'
-alias auth-cluster-prod='myob-auth login --username `whoami` --role adfs-ex-cluster-production-admin'
-alias auth-cluster-preprod='myob-auth login --username `whoami` --role adfs-ex-cluster-preprod-admin'
-
-# kubectl
-alias kb-dev='kubectl --kubeconfig ~/.kube/dev-config'
-alias kb-preprod='kubectl --kubeconfig ~/.kube/preprod-config'
-alias kb-prod='kubectl --kubeconfig ~/.kube/prod-config'
