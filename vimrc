@@ -10,7 +10,8 @@ Plug 'majutsushi/tagbar'
 Plug 'SirVer/ultisnips'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-airline/vim-airline'
-
+Plug '/usr/local/opt/fzf'
+Plug 'junegunn/fzf.vim'
 call plug#end()
 
 " Auto Start NerdTREE
@@ -72,3 +73,10 @@ set shiftwidth=2
 highligh ColorColumn ctermfg=1 ctermbg=NONE
 autocmd BufRead,BufNewFile *.md setlocal textwidth=80
 let &colorcolumn=join(range(80,999),",")
+
+" Bindings for fzf (https://github.com/junegunn/fzf.vim)
+nmap <leader>f :Files<cr>|     " fuzzy find files in the working directory (where you launched Vim from)
+nmap <leader>/ :BLines<cr>|    " fuzzy find lines in the current file
+nmap <leader>b :Buffers<cr>|   " fuzzy find an open buffer
+nmap <leader>r :Rg |           " fuzzy find text in the working directory
+nmap <leader>c :Commands<cr>|  " fuzzy find Vim commands (like Ctrl-Shift-P in Sublime/Atom/VSC)
