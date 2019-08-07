@@ -70,9 +70,16 @@ set smartindent
 set tabstop=2
 set softtabstop=2
 set shiftwidth=2
-highligh ColorColumn ctermfg=1 ctermbg=NONE
+
+
+" Highligh chars in lines that are longer than 80 chars
+highlight ColorColumn ctermfg=1 ctermbg=NONE
 autocmd BufRead,BufNewFile *.md setlocal textwidth=80
 let &colorcolumn=join(range(80,999),",")
+highlight LineNr ctermfg=8
+
+" Line numbers
+set number
 
 " Bindings for fzf (https://github.com/junegunn/fzf.vim)
 nmap <leader>f :Files<cr>|     " fuzzy find files in the working directory (where you launched Vim from)
