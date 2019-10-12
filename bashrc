@@ -47,4 +47,6 @@ HEROKU_AC_BASH_SETUP_PATH=/Users/gus/Library/Caches/heroku/autocomplete/bash_set
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
 
+# Setting fd as the default source for fzf
+export FZF_DEFAULT_COMMAND='fd --type f'
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
