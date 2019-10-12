@@ -2,6 +2,12 @@
 
 source ~/.{aliases,functions,exports}
 
+export HISTSIZE=10000
+export HISTFILESIZE=10000
+export HISTIGNORE="ls:ps:history:ll:tig:gst"
+export HISTCONTROL=ignoreboth
+PROMPT_COMMAND='history -a'
+
 # GOPATH
 export GOPATH=~/.go
 export PATH="$GOPATH/bin:$PATH"
