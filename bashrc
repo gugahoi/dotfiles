@@ -10,6 +10,7 @@ PROMPT_COMMAND='history -a'
 
 # GOPATH
 export GOPATH=~/.go
+export GO111MODULE=on
 export PATH="$GOPATH/bin:$PATH"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
