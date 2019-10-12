@@ -1,30 +1,34 @@
 call plug#begin(expand('~/.vim/bundle'))
-" Use single quotes
 
-Plug 'scrooloose/nerdcommenter'
-Plug 'scrooloose/nerdtree'
-Plug 'tpope/vim-fugitive'
-Plug 'fatih/vim-go'
+" Generic Plugins
 Plug 'shougo/neocomplete.vim'
-Plug 'majutsushi/tagbar'
-Plug 'SirVer/ultisnips'
-Plug 'ctrlpvim/ctrlp.vim'
+Plug 'scrooloose/nerdcommenter'
 Plug 'vim-airline/vim-airline'
+Plug 'tpope/vim-surround'
+" Plug 'SirVer/ultisnips'
+" Plug 'majutsushi/tagbar'
+
+" Git Utils
+" Plug 'tpope/vim-fugitive'
+
+" Go Plugins
+Plug 'fatih/vim-go'
+
+" File mgmt
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
-call plug#end()
+" Plug 'scrooloose/nerdtree'
 
-" Auto Start NerdTREE
-" autocmd vimenter * NERDTree
-nmap <F6> :NERDTreeToggle<CR>
-" Go to document window
-autocmd VimEnter * wincmd p
+" JS Plugins
+Plug 'pangloss/vim-javascript'
+Plug 'MaxMEllon/vim-jsx-pretty'
+
+" Time mgmt
+Plug 'wakatime/vim-wakatime'
+call plug#end()
 
 " Auto Start Neocomplete
 let g:neocomplete#enable_at_startup = 1
-
-" TagbarToggle
-nmap <F8> :TagbarToggle<CR>
 
 " Go Keybinding
 " Tests
@@ -71,7 +75,6 @@ set tabstop=2
 set softtabstop=2
 set shiftwidth=2
 
-
 " Highligh chars in lines that are longer than 80 chars
 highlight ColorColumn ctermfg=1 ctermbg=NONE
 autocmd BufRead,BufNewFile *.md setlocal textwidth=80
@@ -80,6 +83,7 @@ highlight LineNr ctermfg=8
 
 " Line numbers
 set number
+set relativenumber
 
 " Bindings for fzf (https://github.com/junegunn/fzf.vim)
 nmap <leader>f :Files<cr>|     " fuzzy find files in the working directory (where you launched Vim from)
@@ -87,3 +91,9 @@ nmap <leader>/ :BLines<cr>|    " fuzzy find lines in the current file
 nmap <leader>b :Buffers<cr>|   " fuzzy find an open buffer
 nmap <leader>r :Rg |           " fuzzy find text in the working directory
 nmap <leader>c :Commands<cr>|  " fuzzy find Vim commands (like Ctrl-Shift-P in Sublime/Atom/VSC)
+
+" Disable arrow keys
+noremap <Up> <Nop>
+noremap <Down> <Nop>
+noremap <Left> <Nop>
+noremap <Right> <Nop>
