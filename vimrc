@@ -1,12 +1,14 @@
 call plug#begin(expand('~/.vim/bundle'))
 
 " Generic Plugins
-Plug 'shougo/neocomplete.vim'
+"Plug 'shougo/neocomplete.vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'scrooloose/nerdcommenter'
 Plug 'vim-airline/vim-airline'
 Plug 'tpope/vim-surround'
-" Plug 'SirVer/ultisnips'
-" Plug 'majutsushi/tagbar'
+
+" Linting Plugin
+Plug 'dense-analysis/ale'
 
 " Git Utils
 " Plug 'tpope/vim-fugitive'
@@ -22,6 +24,7 @@ Plug 'junegunn/fzf.vim'
 " JS Plugins
 Plug 'pangloss/vim-javascript'
 Plug 'MaxMEllon/vim-jsx-pretty'
+Plug 'mattn/emmet-vim'
 
 " Time mgmt
 Plug 'wakatime/vim-wakatime'
@@ -75,10 +78,10 @@ set tabstop=2
 set softtabstop=2
 set shiftwidth=2
 
-" Highligh chars in lines that are longer than 80 chars
+" Highlight chars in lines that are longer than 80 chars
 highlight ColorColumn ctermfg=1 ctermbg=NONE
-autocmd BufRead,BufNewFile *.md setlocal textwidth=80
-let &colorcolumn=join(range(80,999),",")
+autocmd BufRead,BufNewFile *.md setlocal textwidth=81
+let &colorcolumn=join(range(81,999),",")
 highlight LineNr ctermfg=8
 
 " Line numbers
@@ -97,3 +100,11 @@ noremap <Up> <Nop>
 noremap <Down> <Nop>
 noremap <Left> <Nop>
 noremap <Right> <Nop>
+
+" JSX Config
+let g:vim_jsx_pretty_colorful_config = 1
+
+" ALE Linter options
+let b:ale_fixers = {'javascript': ['prettier', 'eslint']}
+" ALE Show errors/Warnings in status line
+let g:airline#extensions#ale#enabled = 1
