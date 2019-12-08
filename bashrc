@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source ~/.{aliases,functions,exports}
+source "${HOME}/.aliases"
+source "${HOME}/.functions"
+source "${HOME}/.exports"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
