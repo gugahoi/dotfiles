@@ -18,7 +18,6 @@ Plug 'fatih/vim-go'
 " File mgmt
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
-" Plug 'scrooloose/nerdtree'
 
 " JS Plugins
 Plug 'pangloss/vim-javascript'
