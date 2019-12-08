@@ -2,6 +2,7 @@
 
 source ~/.{aliases,functions,exports}
 
+export EDITOR=vim
 export HISTSIZE=10000
 export HISTFILESIZE=10000
 export HISTIGNORE="ls:ps:history:ll:tig:gst"
