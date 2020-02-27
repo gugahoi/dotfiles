@@ -7,7 +7,7 @@ Plug 'vim-airline/vim-airline'
 Plug 'tpope/vim-surround'
 
 " Linting Plugin
-Plug 'dense-analysis/ale'
+"Plug 'dense-analysis/ale'
 
 " Git Utils
 " Plug 'tpope/vim-fugitive'
@@ -42,6 +42,8 @@ Plug 'morhetz/gruvbox'
 call plug#end()
 
 colo gruvbox
+" dark mode
+set bg=dark
 
 " Go Keybinding
 " Tests
@@ -65,7 +67,7 @@ let g:go_fmt_command = "goimports"
 let g:go_code_completion_enabled = 0
 
 " Fix Backspace mapping so it actually deletes
-:set backspace=indent,eol,start
+set backspace=indent,eol,start
 
 " Highlight
 let g:go_highlight_functions = 1  
@@ -82,14 +84,17 @@ set tabstop=2
 set softtabstop=2
 set shiftwidth=2
 
-"" Fix backspace indent
+" Fix backspace indent
 set backspace=indent,eol,start
 
-"" Tabs. May be overridden by autocmd rules
+" Tabs. May be overridden by autocmd rules
 set tabstop=4
 set softtabstop=0
 set shiftwidth=4
 set expandtab
+
+" Always show sign column
+set signcolumn=yes
 
 " Highlight chars in lines that are longer than 80 chars
 highlight ColorColumn ctermfg=1 ctermbg=NONE
