@@ -180,7 +180,6 @@ alias dcb='docker-compose build'
 alias dcu='docker-compose up'
 
 # Git shortcuts
-alias git='hub'
 alias gst='git status'
 alias gitup='git checkout master && git pull && git checkout -'
 
