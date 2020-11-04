@@ -182,6 +182,8 @@ alias dcu='docker-compose up'
 # Git shortcuts
 alias gst='git status'
 alias gitup='git checkout master && git pull && git checkout -'
+alias pull='git pull'
+alias commit='git commit'
 
 command -v bat >/dev/null && alias cat='bat'
 
