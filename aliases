@@ -184,6 +184,8 @@ alias gst='git status'
 alias gitup='git checkout master && git pull && git checkout -'
 alias pull='git pull'
 alias commit='git commit'
+alias switch='git switch'
+alias master='git switch master'
 
 command -v bat >/dev/null && alias cat='bat'
 
@@ -193,3 +195,9 @@ alias kpow='watch kubectl get pods'
 alias k='kubectl'
 alias kns='kubens'
 alias kcts='kubectx'
+
+# List open ports
+alias ports='lsof -i -P -n | grep LISTEN'
+
+alias vi="nvim"
+alias vim="nvim"
