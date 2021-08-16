@@ -2,79 +2,74 @@ call plug#begin(expand('~/.vim/bundle'))
 
 " Generic Plugins
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"Plug 'tpope/vim-surround'
 Plug 'scrooloose/nerdcommenter'
 Plug 'vim-airline/vim-airline'
-Plug 'tpope/vim-surround'
+Plug 'machakann/vim-sandwich'
+Plug 'jiangmiao/auto-pairs'
+Plug 'skywind3000/asyncrun.vim'
+"Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
 
-" Linting Plugin
-"Plug 'dense-analysis/ale'
+" Snippets
+"Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
 
 " Git Utils
-" Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-fugitive'
 
 " Go Plugins
-Plug 'fatih/vim-go'
+"Plug 'fatih/vim-go'
+
+" Swift
+Plug 'keith/swift.vim'
 
 " File mgmt
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
 
 " JS Plugins
-Plug 'pangloss/vim-javascript'
-Plug 'MaxMEllon/vim-jsx-pretty'
-Plug 'mattn/emmet-vim'
+"Plug 'pangloss/vim-javascript'
+"Plug 'MaxMEllon/vim-jsx-pretty'
+"Plug 'mattn/emmet-vim'
 
 " Typescript
 "Plug 'leafgarland/typescript-vim'
-"Plug 'lanks/vim-tsx'
+"Plug 'ianks/vim-tsx'
+Plug 'HerringtonDarkholme/yats.vim'
+Plug 'peitalin/vim-jsx-typescript'
 
 " Time mgmt
 Plug 'wakatime/vim-wakatime'
 
 " Documentation
-Plug 'rizzatti/dash.vim'
+"Plug 'rizzatti/dash.vim'
 
 " Indentation Coloring
 Plug 'Yggdroot/indentLine'
 
+Plug 'machakann/vim-highlightedyank'
+
 " Color scheme
-Plug 'morhetz/gruvbox'
+"Plug 'morhetz/gruvbox'
+Plug 'ayu-theme/ayu-vim'
+
+" Tests
+Plug 'vim-test/vim-test'
 call plug#end()
 
-colo gruvbox
-" dark mode
-set bg=dark
+" Gruvbox settings
+"colo gruvbox
+"set bg=dark
 
-" Go Keybinding
-" Tests
-autocmd FileType go nmap <leader>t  <Plug>(go-test)
+" vim-sandwich
+let g:sandwich#recipes = deepcopy(g:sandwich#default_recipes)
 
-" run :GoBuild or :GoTestCompile based on the go file
-function! s:build_go_files()
-  let l:file = expand('%')
-  if l:file =~# '^\f\+_test\.go$'
-    call go#cmd#Test(0, 1)
-  elseif l:file =~# '^\f\+\.go$'
-    call go#cmd#Build(0)
-  endif
-endfunction
-
-autocmd FileType go nmap <leader>b :<C-u>call <SID>build_go_files()<CR>
-
-" Auto Add Imports when saving go files
-let g:go_fmt_command = "goimports"
-" Disable autocompletion through vim-go (coc will be doing that for us)
-let g:go_code_completion_enabled = 0
+" Ayu Settings
+set termguicolors
+let ayucolor="dark"   
+colo ayu
 
 " Fix Backspace mapping so it actually deletes
 set backspace=indent,eol,start
-
-" Highlight
-let g:go_highlight_functions = 1  
-let g:go_highlight_methods = 1  
-let g:go_highlight_structs = 1  
-let g:go_highlight_operators = 1  
-let g:go_highlight_build_constraints = 1  
 
 " indentation
 set expandtab
@@ -86,12 +81,6 @@ set shiftwidth=2
 
 " Fix backspace indent
 set backspace=indent,eol,start
-
-" Tabs. May be overridden by autocmd rules
-set tabstop=4
-set softtabstop=0
-set shiftwidth=4
-set expandtab
 
 " Always show sign column
 set signcolumn=yes
@@ -116,14 +105,6 @@ nmap <leader>c :Commands<cr>|  " fuzzy find Vim commands (like Ctrl-Shift-P in S
 "Recovery commands from history through FZF
 nmap <leader>y :History:<CR>
 
-" JSX Config
-let g:vim_jsx_pretty_colorful_config = 1
-
-" ALE Linter options
-let b:ale_fixers = {'javascript': ['prettier', 'eslint']}
-" ALE Show errors/Warnings in status line
-let g:airline#extensions#ale#enabled = 1
-
 "" Rewrite capital commands for the shift holders like me
 cnoreabbrev W! w!
 cnoreabbrev Q! q!
@@ -142,27 +123,6 @@ nnoremap Q <nop>
 "  Alternatively, use ; instead of : to insert commands
 nnoremap ; :
 
-" CocVim
-inoremap <silent><expr> <TAB>
-  \ pumvisible() ? coc#_select_confirm() :
-  \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
-  \ <SID>check_back_space() ? "\<TAB>" :
-  \ coc#refresh()
-
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-
-let g:coc_snippet_next = '<tab>'
-let g:coc_global_extensions = [ 
-    \'coc-json', 
-    \'coc-tsserver',
-    \'coc-emmet',
-    \'coc-eslint', 
-    \'coc-prettier'
-\]
-
 "" Enable hidden buffers
 set hidden
 
@@ -180,6 +140,80 @@ set scrolloff=3
 " search will center on the line it's found in.
 nnoremap n nzzzv
 nnoremap N Nzzzv
+
+"""""""""""""""""""""
+" COC Configuration "
+"""""""""""""""""""""
+"
+" Use `[g` and `]g` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use K to show documentation in preview window.
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+:
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
+
+" Use tab for trigger completion with characters ahead and navigate.
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config.
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Use <c-space> to trigger completion.
+if has('nvim')
+  inoremap <silent><expr> <c-space> coc#refresh()
+else
+  inoremap <silent><expr> <c-@> coc#refresh()
+endif
+
+" Make <CR> auto-select the first completion item and notify coc.nvim to
+" format on enter, <cr> could be remapped by other vim plugin
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+" Test Running
+" these "Ctrl mappings" work well when Caps Lock is mapped to Ctrl
+nmap <silent> t<C-n> :TestNearest<CR>
+nmap <silent> t<C-f> :TestFile<CR>
+nmap <silent> t<C-s> :TestSuite<CR>
+nmap <silent> t<C-l> :TestLast<CR>
+nmap <silent> t<C-g> :TestVisit<CR>
+"let test#strategy = "neovim"
+
+" Automatically run tests on save if available
+"augroup test
+  "autocmd!
+  "autocmd BufWrite * if test#exists() |
+    "\   TestFile |
+    "\ endif
+"augroup END
+
+" Symbol renaming.
+nmap <leader>2 <Plug>(coc-rename)
 
 " Switching windows
 noremap <C-j> <C-w>j
