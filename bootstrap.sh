@@ -12,7 +12,7 @@ fi
 
 echo "Linking files"
 mkdir -p  ~/.dotfiles_backup
-for f in "aliases" "exports" "functions" "vimrc" "bashrc"
+for f in "aliases" "exports" "functions" "vimrc" "zshrc"
 do
   echo "Linking \"$f\""
   if [ -f ~/.$f ]; then
