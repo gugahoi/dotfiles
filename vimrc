@@ -2,6 +2,7 @@ call plug#begin(expand('~/.vim/bundle'))
 
 " Generic Plugins
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'rodrigore/coc-tailwind-intellisense', {'do': 'npm install'}
 "Plug 'tpope/vim-surround'
 Plug 'scrooloose/nerdcommenter'
 Plug 'vim-airline/vim-airline'
@@ -68,9 +69,6 @@ set termguicolors
 let ayucolor="dark"   
 colo ayu
 
-" Fix Backspace mapping so it actually deletes
-set backspace=indent,eol,start
-
 " indentation
 set expandtab
 set autoindent
@@ -83,7 +81,10 @@ set shiftwidth=2
 set backspace=indent,eol,start
 
 " Always show sign column
-set signcolumn=yes
+set signcolumn=number
+
+" Don't pass messages to |ins-completion-menu|.
+set shortmess+=c
 
 " Highlight chars in lines that are longer than 80 chars
 highlight ColorColumn ctermfg=1 ctermbg=NONE
@@ -99,10 +100,8 @@ set relativenumber
 nmap <leader>f :Files<cr>|     " fuzzy find files in the working directory (where you launched Vim from)
 nmap <leader>/ :BLines<cr>|    " fuzzy find lines in the current file
 nmap <leader>b :Buffers<cr>|   " fuzzy find an open buffer
-nmap <leader>r :Rg |           " fuzzy find text in the working directory
+nmap <leader>r :Rg<cr>|           " fuzzy find text in the working directory
 nmap <leader>c :Commands<cr>|  " fuzzy find Vim commands (like Ctrl-Shift-P in Sublime/Atom/VSC)
-
-"Recovery commands from history through FZF
 nmap <leader>y :History:<CR>
 
 "" Rewrite capital commands for the shift holders like me
@@ -134,12 +133,14 @@ set smartcase
 
 "" Disable the blinking cursor.
 set gcr=a:blinkon0
-set scrolloff=3
+set scrolloff=8
 
 " Search mappings: These will make it so that going to the next one in a
 " search will center on the line it's found in.
 nnoremap n nzzzv
 nnoremap N Nzzzv
+
+nmap <space>c :copen<CR>
 
 """""""""""""""""""""
 " COC Configuration "
@@ -156,9 +157,22 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
+" Applying codeAction to the selected region.
+nmap <silent> ga <Plug>(coc-codeaction)
+nmap <silent> <space>qf  <Plug>(coc-fix-current)
+
+" Applying codeAction to the selected region.
+xmap <silent> <C-a> <Plug>(coc-codeaction-selected)
+nmap <silent> <C-a> <Plug>(coc-codeaction-selected)
+
+" Symbol renaming.
+nmap <space>r <Plug>(coc-rename)
+nmap <space>f :CocFix<CR>
+nmap <space>o :CocCommand editor.action.organizeImport<CR>
+
 " Use K to show documentation in preview window.
 nnoremap <silent> K :call <SID>show_documentation()<CR>
-:
+
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
     execute 'h '.expand('<cword>')
@@ -212,13 +226,18 @@ nmap <silent> t<C-g> :TestVisit<CR>
     "\ endif
 "augroup END
 
-" Symbol renaming.
-nmap <leader>2 <Plug>(coc-rename)
+" Create directories on Save
+" source: https://vi.stackexchange.com/a/679
+augroup Mkdir
+  autocmd!
+  autocmd BufWritePre * call mkdir(expand("<afile>:p:h"), "p")
+augroup END
 
 " Switching windows
 noremap <C-j> <C-w>j
 noremap <C-k> <C-w>k
 noremap <C-l> <C-w>l
+noremap <C-h> <C-w>h
 
 " Disable arrow keys
 noremap <Up> <Nop>
@@ -226,4 +245,4 @@ noremap <Down> <Nop>
 noremap <Left> <Nop>
 noremap <Right> <Nop>
 
-noremap <C-h> <C-w>h
+let g:airline#extensions#tabline#enabled = 0
