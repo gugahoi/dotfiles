@@ -105,9 +105,10 @@ set relativenumber
 
 " Bindings for fzf (https://github.com/junegunn/fzf.vim)
 nmap <leader>f :Files<cr>|     " fuzzy find files in the working directory (where you launched Vim from)
+nmap <leader>g :GFiles<cr>|    " fuzzy find files in the working directory (where you launched Vim from)
 nmap <leader>/ :BLines<cr>|    " fuzzy find lines in the current file
 nmap <leader>b :Buffers<cr>|   " fuzzy find an open buffer
-nmap <leader>r :Rg<cr>|           " fuzzy find text in the working directory
+nmap <leader>r :Rg<cr>|        " fuzzy find text in the working directory
 nmap <leader>c :Commands<cr>|  " fuzzy find Vim commands (like Ctrl-Shift-P in Sublime/Atom/VSC)
 nmap <leader>y :History:<CR>
 
@@ -146,6 +147,8 @@ set scrolloff=8
 " search will center on the line it's found in.
 nnoremap n nzzzv
 nnoremap N Nzzzv
+" Clear Highlighted Search when you hit ESC
+nnoremap <esc> :noh<return><esc>
 
 nmap <space>c :copen<CR>
 
@@ -167,6 +170,9 @@ nmap <silent> gr <Plug>(coc-references)
 " Applying codeAction to the selected region.
 nmap <silent> ga <Plug>(coc-codeaction)
 nmap <silent> <space>qf  <Plug>(coc-fix-current)
+nmap <silent> <space>f  <Plug>(coc-codeaction-cursor)
+" Why is the mapping below not working?
+"nmap <silent> <space>qq  <Plug>(coc-codeaction-selected)
 
 " Applying codeAction to the selected region.
 xmap <silent> <C-a> <Plug>(coc-codeaction-selected)
@@ -174,7 +180,6 @@ nmap <silent> <C-a> <Plug>(coc-codeaction-selected)
 
 " Symbol renaming.
 nmap <space>r <Plug>(coc-rename)
-nmap <space>f :CocFix<CR>
 nmap <space>o :CocCommand editor.action.organizeImport<CR>
 
 " Use K to show documentation in preview window.
@@ -216,6 +221,25 @@ endif
 inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
+
+" Mappings for CocList
+" Show all diagnostics.
+nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
+" Manage extensions.
+nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
+" Show commands.
+nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
+" Find symbol of current document.
+nnoremap <silent><nowait> <space>oo  :<C-u>CocList outline<cr>
+" Search workspace symbols.
+nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
+" Do default action for next item.
+nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
+" Resume latest coc list.
+nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+
 " Test Running
 " these "Ctrl mappings" work well when Caps Lock is mapped to Ctrl
 nmap <silent> t<C-n> :TestNearest<CR>
@@ -251,6 +275,9 @@ noremap <Up> <Nop>
 noremap <Down> <Nop>
 noremap <Left> <Nop>
 noremap <Right> <Nop>
+
+" Podfile is in ruby syntax
+au BufRead,BufNewFile Podfile set filetype=ruby
 
 let g:airline#extensions#tabline#enabled = 0
 
