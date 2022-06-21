@@ -59,6 +59,9 @@ Plug 'vim-test/vim-test'
 
 " Autocomplete Machine Learning
 Plug 'github/copilot.vim'
+
+" Pretty Quick Fix List
+Plug 'https://gitlab.com/yorickpeterse/nvim-pqf.git'
 call plug#end()
 
 " Gruvbox settings
@@ -250,3 +253,5 @@ noremap <Left> <Nop>
 noremap <Right> <Nop>
 
 let g:airline#extensions#tabline#enabled = 0
+
+lua require('pqf').setup()
