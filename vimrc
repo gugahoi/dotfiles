@@ -24,8 +24,9 @@ Plug 'tpope/vim-fugitive'
 Plug 'keith/swift.vim'
 
 " File mgmt
-Plug '/usr/local/opt/fzf'
-Plug 'junegunn/fzf.vim'
+"Plug '/usr/local/opt/fzf'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim' 
 
 " JS Plugins
 "Plug 'pangloss/vim-javascript'
