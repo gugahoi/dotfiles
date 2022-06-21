@@ -56,6 +56,9 @@ Plug 'ayu-theme/ayu-vim'
 
 " Tests
 Plug 'vim-test/vim-test'
+
+" Autocomplete Machine Learning
+Plug 'github/copilot.vim'
 call plug#end()
 
 " Gruvbox settings
