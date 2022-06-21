@@ -1,0 +1,9 @@
+[user]
+	name = Gustavo Hoirisch
+	email = gugahoi@users.noreply.github.com
+[pull]
+	ff = only
+[push]
+	default = current
+[icdiff]
+	options = --highlight --line-numbers
