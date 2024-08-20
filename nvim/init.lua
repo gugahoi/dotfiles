@@ -1,99 +1,137 @@
--- Install packer
-local install_path = vim.fn.stdpath 'data' .. '/site/pack/packer/start/packer.nvim'
+-- Set <space> as the leader key
+-- See `:help mapleader`
+--  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
 
-if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-  vim.fn.execute('!git clone https://github.com/wbthomason/packer.nvim ' .. install_path)
-end
+require 'kickstart.options'
+require 'kickstart.keymaps'
+require 'kickstart.autocmd'
 
--- local packer_group = vim.api.nvim_create_augroup('Packer', { clear = true })
--- vim.api.nvim_create_autocmd('BufWritePost',
---   { command = 'source <afile> | PackerCompile', group = packer_group, pattern = 'init.lua' })
+-- [[ Install `lazy.nvim` plugin manager ]]
+--    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
+local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
+if not vim.loop.fs_stat(lazypath) then
+  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
+  vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
+end ---@diagnostic disable-next-line: undefined-field
+vim.opt.rtp:prepend(lazypath)
 
-require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim' -- Package manager
-  use 'tpope/vim-fugitive' -- Git commands in nvim
-  use 'tpope/vim-rhubarb' -- Fugitive-companion to interact with github
-  use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
-  -- UI to select things (files, grep results, open buffers...)
-  use { 'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim', 'nvim-telescope/telescope-frecency.nvim' } }
-  use { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
-  use { 'nvim-telescope/telescope-frecency.nvim', requires = { "tami5/sqlite.lua" } }
-  -- use 'mjlbach/onedark.nvim' -- Theme inspired by Atom
-  use "projekt0n/github-nvim-theme" -- github inspired theme
-  use 'nvim-lualine/lualine.nvim' -- Fancier statusline
-  -- Add indentation guides even on blank lines
-  use 'lukas-reineke/indent-blankline.nvim'
-  -- Add git related info in the signs columns and popups
-  use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
-  -- Highlight, edit, and navigate code using a fast incremental parsing library
-  use 'nvim-treesitter/nvim-treesitter'
-  -- Additional textobjects for treesitter
-  use 'nvim-treesitter/nvim-treesitter-textobjects'
-  use 'windwp/nvim-ts-autotag'
+-- [[ Configure and install plugins ]]
+--
+--  To check the current status of your plugins, run
+--    :Lazy
+--
+--  You can press `?` in this menu for help. Use `:q` to close the window
+--
+--  To update plugins, you can run
+--    :Lazy update
+--
+-- NOTE: Here is where you install your plugins.
+require('lazy').setup {
+  { 'folke/neodev.nvim', config = true },
+  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  { -- Useful plugin to show you pending keybinds.
+    'folke/which-key.nvim',
+    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    config = function() -- This is the function that runs, AFTER loading
+      require('which-key').setup()
 
-  -- typescript helpers (Rename file, imports, etc...)
-  use { 'jose-elias-alvarez/nvim-lsp-ts-utils', requires = { 'nvim-lua/plenary.nvim' } }
-  use "williamboman/nvim-lsp-installer" -- UI for LSP servers in neovim
-  use 'neovim/nvim-lspconfig' -- Collection of configurations for built-in LSP client
-
-  -- cmp and plugins
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'hrsh7th/cmp-buffer'
-  use 'hrsh7th/cmp-cmdline'
-  use 'petertriho/cmp-git'
-  use 'saadparwaiz1/cmp_luasnip'
-  use 'hrsh7th/nvim-cmp'
-  use { "zbirenbaum/copilot-cmp", module = "copilot_cmp" }
-
-  use 'L3MON4D3/LuaSnip' -- Snippets plugin
-  use 'rafamadriz/friendly-snippets'
-  use 'jose-elias-alvarez/null-ls.nvim' -- Useful for running prettier on save
-  use 'norcalli/nvim-colorizer.lua' -- show colors (hex/name) to vim
-  use 'ray-x/lsp_signature.nvim' -- show functions signature help
-  use 'machakann/vim-sandwich' -- edit surroundings of a textobject (',",{,[,...
-  use 'windwp/nvim-autopairs' --
-  use 'https://gitlab.com/yorickpeterse/nvim-pqf.git' -- pretty quickfix
-  use 'github/copilot.vim'
-end)
-
-require('config.opts')
-require('config.mappings')
-require('config.telescope')
-require('config.treesitter')
-require('config.lsp')
-require('config.cmp')
-require('config.null_ls')
-require('config.sandwich')
-
-require('Comment').setup()
-require('pqf').setup()
-require('github-theme').setup({ theme_style = 'dark_default' })
-require 'colorizer'.setup({ css = { css = true } })
-require('lualine').setup {
-  options = {
-    icons_enabled = false,
-    theme = 'onedark',
-    component_separators = '|',
-    section_separators = '',
+      -- Document existing key chains
+      require('which-key').register {
+        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
+        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
+        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
+        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
+        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+        ['<leader>t'] = { name = '[T]erminal', _ = 'which_key_ignore' },
+      }
+    end,
   },
-}
-require('indent_blankline').setup {
-  char = '┊',
-  show_trailing_blankline_indent = true,
-}
-require('gitsigns').setup {
-  signs = {
-    add = { text = '+' },
-    change = { text = '~' },
-    delete = { text = '_' },
-    topdelete = { text = '‾' },
-    changedelete = { text = '~' },
+  { -- Autoformat
+    'stevearc/conform.nvim',
+    opts = {
+      format_on_save = function(bufnr)
+        -- Disable autoformat on certain filetypes
+        -- For typescript, we don't want the LSP to format_on_save as we generally use other tools like the ESLint LSP.
+        local ignore_filetypes = { 'typescript', 'typescriptreact' }
+        if vim.tbl_contains(ignore_filetypes, vim.bo[bufnr].filetype) then
+          return
+        end
+        return {
+          timeout_ms = 500,
+          lsp_fallback = true,
+        }
+      end,
+      notify_on_error = false,
+      formatters_by_ft = {
+        lua = { 'stylua' },
+      },
+    },
   },
+  {
+    'projekt0n/github-nvim-theme',
+    lazy = false, -- make sure we load this during startup if it is your main colorscheme
+    priority = 1000, -- make sure to load this before all the other start plugins
+    config = function()
+      require('github-theme').setup {
+        -- ...
+      }
+
+      vim.cmd 'colorscheme github_dark_high_contrast'
+    end,
+  },
+  -- {
+  --   'nyoom-engineering/oxocarbon.nvim',
+  --   lazy = false, -- make sure we load this during startup if it is your main colorscheme
+  --   priority = 1000, -- make sure to load this before all the other start plugins
+  --   config = function()
+  --     vim.cmd.colorscheme 'oxocarbon'
+  --   end,
+  -- },
+  -- Comments
+  { 'numToStr/Comment.nvim', opts = {} },
+  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  { -- Collection of various small independent plugins/modules
+    'echasnovski/mini.nvim',
+    config = function()
+      -- Better Around/Inside textobjects
+      --
+      -- Examples:
+      --  - va)  - [V]isually select [A]round [)]paren
+      --  - yinq - [Y]ank [I]nside [N]ext [']quote
+      --  - ci'  - [C]hange [I]nside [']quote
+      require('mini.ai').setup { n_lines = 500 }
+
+      -- Add/delete/replace surroundings (brackets, quotes, etc.)
+      --
+      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
+      -- - sd'   - [S]urround [D]elete [']quotes
+      -- - sr)'  - [S]urround [R]eplace [)] [']
+      require('mini.surround').setup()
+
+      -- Simple and easy statusline.
+      --  You could remove this setup call if you don't like it,
+      --  and try some other statusline plugin
+      local statusline = require 'mini.statusline'
+      statusline.setup()
+
+      -- You can configure sections in the statusline by overriding their
+      -- default behavior. For example, here we set the section for
+      -- cursor location to LINE:COLUMN
+      ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_location = function()
+        return '%2l:%-2v'
+      end
+
+      -- ... and there is more!
+      --  Check out: https://github.com/echasnovski/mini.nvim
+    end,
+  },
+  -- require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  { import = 'custom.plugins' },
 }
-require "lsp_signature".setup({
-  bind = true, -- This is mandatory, otherwise border config won't get registered.
-  handler_opts = {
-    border = "rounded"
-  }
-})
+
+-- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
