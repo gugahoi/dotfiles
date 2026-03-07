@@ -1,0 +1,7 @@
+require("plugins.theme")
+require("plugins.amp")
+require("plugins.snacks")
+require("plugins.treesitter")
+require("plugins.lsp")
+require("plugins.format")
+require("plugins.git")
