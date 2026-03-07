@@ -1,4 +1,3 @@
--- Add treesitter plugin
 vim.pack.add({
 	{
 		src = "https://github.com/nvim-treesitter/nvim-treesitter",
@@ -11,42 +10,61 @@ vim.pack.add({
 	},
 })
 
--- local ok, ts = pcall(require, "nvim-treesitter")
-local ok, _ = pcall(require, "nvim-treesitter")
-if not ok then
-	return
-end
+require("nvim-treesitter").setup()
+require("nvim-treesitter").install({
+	"bash",
+	"comment",
+	"css",
+	"dockerfile",
+	"gitcommit",
+	"go",
+	"javascript",
+	"jsdoc",
+	"json",
+	"lua",
+	"markdown",
+	"sql",
+	"terraform",
+	"tsx",
+	"typescript",
+	"vim",
+	"yaml",
+})
 
--- This is disabled as it seems to be called during every startup. Not sure how
--- to resolve for now
--- local ensure_installed = { "go", "typescript", "lua", "javascript", "json" }
---
--- local already_installed = ts.get_installed()
---
--- local to_install = vim.iter(ensure_installed)
--- 	:filter(function(parser)
--- 		return not vim.tbl_contains(already_installed, parser)
--- 	end)
--- 	:totable()
---
--- if #to_install > 0 then
--- 	ts.install(to_install)
--- end
+vim.api.nvim_create_autocmd("PackChanged", {
+	desc = "Handle nvim-treesitter updates",
+	group = vim.api.nvim_create_augroup("nvim-treesitter-pack-changed-update-handler", { clear = true }),
+	callback = function(event)
+		if event.data.kind == "update" then
+			local ok = pcall(vim.cmd, "TSUpdate")
+			if ok then
+				vim.notify("TSUpdate completed successfully!", vim.log.levels.INFO)
+			else
+				vim.notify("TSUpdate command not available yet, skipping", vim.log.levels.WARN)
+			end
+		end
+	end,
+})
 
 -- Folds
-vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
-vim.wo[0][0].foldmethod = "expr"
+vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.wo.foldmethod = "expr"
+vim.opt.foldlevel = 99
 
 -- Indentation [experimental]
 vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 
 vim.api.nvim_create_autocmd("FileType", {
-	group = vim.api.nvim_create_augroup("EnableTreesitterHighlighting", { clear = true }),
-	desc = "Try to enable tree-sitter syntax highlighting",
-	pattern = "*", -- run on *all* filetypes
+	pattern = { "*" },
 	callback = function()
-		pcall(function()
-			vim.treesitter.start()
-		end)
+		local filetype = vim.bo.filetype
+		if filetype and filetype ~= "" then
+			local success = pcall(function()
+				vim.treesitter.start()
+			end)
+			if not success then
+				return
+			end
+		end
 	end,
 })
