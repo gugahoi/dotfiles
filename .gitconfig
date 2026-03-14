@@ -5,3 +5,7 @@
 [user]
 	name = Gustavo Hoirisch
 	email = 355877+gugahoi@users.noreply.github.com
+[core]
+	pager = delta
+[interactive]
+	difffilter = delta
