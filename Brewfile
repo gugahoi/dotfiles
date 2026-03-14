@@ -1,4 +1,5 @@
 brew "airdrop-cli"
+brew "atuin"
 brew "bat"
 brew "block-goose-cli"
 brew "bob"
