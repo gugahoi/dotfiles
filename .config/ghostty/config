@@ -1,0 +1,5 @@
+theme = Ayu
+font-size=16
+macos-option-as-alt=left
+window-padding-color=extend-always
+window-padding-balance=true

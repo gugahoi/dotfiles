@@ -1,0 +1,7 @@
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
+[user]
+	name = Gustavo Hoirisch
+	email = 355877+gugahoi@users.noreply.github.com
