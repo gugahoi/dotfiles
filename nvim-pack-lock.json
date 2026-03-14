@@ -10,23 +10,31 @@
       "version": ">=0.0.0"
     },
     "codediff.nvim": {
-      "rev": "3891eeb60a3e511c016f3aa9611442f27021dbb1",
+      "rev": "93cd80c56f71af4671388c568a37d4c84c3ddefa",
       "src": "https://github.com/esmuellert/codediff.nvim"
     },
     "conform.nvim": {
-      "rev": "40dcec5555f960b0a04340d76eabdf4efe78599d",
+      "rev": "086a40dc7ed8242c03be9f47fbcee68699cc2395",
       "src": "https://github.com/stevearc/conform.nvim"
     },
     "cyberdream.nvim": {
       "rev": "a68ffa6af98bf1fc88f33a071c51a188ec85c725",
       "src": "https://github.com/scottmckendry/cyberdream.nvim"
     },
+    "fff.nvim": {
+      "rev": "fcdf4a9172fba824ca6834731b93b74eba51d1c3",
+      "src": "https://github.com/dmtrKovalenko/fff.nvim"
+    },
     "gitsigns.nvim": {
       "rev": "7c4faa3540d0781a28588cafbd4dd187a28ac6e3",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
+    "lazydev.nvim": {
+      "rev": "5231c62aa83c2f8dc8e7ba957aa77098cda1257d",
+      "src": "https://github.com/folke/lazydev.nvim"
+    },
     "mason-lspconfig.nvim": {
-      "rev": "a324581a3c83fdacdb9804b79de1cbe00ce18550",
+      "rev": "a676ab7282da8d651e175118bcf54483ca11e46d",
       "src": "https://github.com/williamboman/mason-lspconfig.nvim"
     },
     "mason.nvim": {
@@ -34,16 +42,20 @@
       "src": "https://github.com/williamboman/mason.nvim"
     },
     "neogit": {
-      "rev": "8fd90675caf8b847280ca56f464b66030adad876",
+      "rev": "b8bfe77ba9a350ce8ea05c38133e28d776a6457c",
       "src": "https://github.com/NeogitOrg/neogit"
     },
     "nvim-lspconfig": {
-      "rev": "ead0f5f342d8d323441e7d4b88f0fc436a81ad5f",
+      "rev": "4d0724be90b633ddce51b328a631060e6acd7d66",
       "src": "https://github.com/neovim/nvim-lspconfig"
     },
     "nvim-treesitter": {
-      "rev": "cb2cb74f3c3cbbcc17e79cada2060165d616d849",
+      "rev": "eb1f8e80cb28eb7892f347609e0bdc5eb574b945",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+    },
+    "nvim-treesitter-textobjects": {
+      "rev": "4e91b5d0394329a229725b021a8ea217099826ef",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
     },
     "plenary.nvim": {
       "rev": "b9fd5226c2f76c951fc8ed5923d85e4de065e509",
