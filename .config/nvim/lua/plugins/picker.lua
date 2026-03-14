@@ -27,7 +27,7 @@ Snacks.setup({
     notifier = { enabled = true },
     picker = {
         sources = {
-            explorer = {},
+            explorer = { hidden = true },
             files = { hidden = true },
             grep = {},
         },
