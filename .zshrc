@@ -41,7 +41,7 @@ ZSH_THEME="robbyrussell"
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
+ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
 # You can also set it to another string to have that shown instead of the default red dots.
@@ -81,31 +81,9 @@ source $ZSH/oh-my-zsh.sh
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
-export EDITOR='nvim'
-
-# Compilation flags
-# export ARCHFLAGS="-arch $(uname -m)"
-
-# Set personal aliases, overriding those provided by Oh My Zsh libs,
-# plugins, and themes. Aliases can be placed here, though Oh My Zsh
-# users are encouraged to define aliases within a top-level file in
-# the $ZSH_CUSTOM folder, with .zsh extension. Examples:
-# - $ZSH_CUSTOM/aliases.zsh
-# - $ZSH_CUSTOM/macos.zsh
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
 # enable vi mode
 bindkey -v
+
 # delete keys fix for vi mode
 bindkey "^H" backward-delete-char
 bindkey "^?" backward-delete-char
@@ -131,27 +109,23 @@ if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 autoload -Uz compinit
 compinit
 
-alias ls=eza
-alias gst="git status"
-alias v=nvim
-alias vim=nvim
-alias cat=bat
-alias reload="source ~/.zshrc"
-
 # Bind <C-s> to run Sesh from zsh shell
 function sesh-sessions() {
-  {
-    exec </dev/tty
-    exec <&1
-    local session
-    session=$(sesh list -t -c | fzf --height 40% --reverse --border-label ' sesh ' --border --prompt '⚡  ')
-    zle reset-prompt > /dev/null 2>&1 || true
-    [[ -z "$session" ]] && return
-    sesh connect $session
-  }
+    {
+        exec </dev/tty
+        exec <&1
+        local session
+        session=$(sesh list -t -c | fzf --height 40% --reverse --border-label ' sesh ' --border --prompt '⚡  ')
+        zle reset-prompt > /dev/null 2>&1 || true
+        [[ -z "$session" ]] && return
+        sesh connect $session
+    }
 }
 
 zle     -N             sesh-sessions
 bindkey -M emacs '^s' sesh-sessions
 bindkey -M vicmd '^s' sesh-sessions
 bindkey -M viins '^s' sesh-sessions
+
+source ~/.aliases
+source ~/.exports

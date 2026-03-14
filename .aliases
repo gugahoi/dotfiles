@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+alias ls=eza
+alias gst="git status"
+alias v=nvim
+alias vim=nvim
+alias cat=bat
+alias reload="source ~/.zshrc"
