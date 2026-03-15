@@ -1,8 +1,39 @@
 #!/usr/bin/env bash
 
-alias ls=eza
-alias gst="git status"
-alias v=nvim
-alias vim=nvim
+# Easier navigation: .., ..., ...., ....., ~ and -
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ~="cd ~" # `cd` is probably faster to type though
+alias -- -="cd -"
+
+# Tool Aliases
 alias cat=bat
+alias gst="git status"
+alias pn=pnpm
 alias reload="source ~/.zshrc"
+alias v=nvim
+alias vi=nvim
+alias vim=nvim
+
+# Always enable colored `grep` output
+# Note: `GREP_OPTIONS="--color=auto"` is deprecated, hence the alias usage.
+alias grep='grep -i --color=auto'
+alias fgrep='fgrep -i --color=auto'
+alias egrep='egrep -i --color=auto'
+
+# Show active network interfaces
+alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
+
+# List open ports
+alias ports='lsof -i -P -n | grep LISTEN'
+
+# LS Aliases
+alias ls=eza
+alias ls="eza -F -gh --group-directories-first --git --icons --color-scale all --hyperlink"
+alias lh='ls -d .*'
+alias lD='ls -D'
+alias lc='ls -1'
+alias ll='ls -l'
+alias la='ll -a'
