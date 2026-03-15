@@ -1,7 +1,10 @@
 [init]
 	defaultBranch = main
 [push]
+	default = current
 	autoSetupRemote = true
+[pull]
+	ff = only
 [user]
 	name = Gustavo Hoirisch
 	email = 355877+gugahoi@users.noreply.github.com
