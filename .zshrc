@@ -127,5 +127,6 @@ bindkey -M emacs '^s' sesh-sessions
 bindkey -M vicmd '^s' sesh-sessions
 bindkey -M viins '^s' sesh-sessions
 
-source ~/.aliases
-source ~/.exports
+source "${HOME}/.aliases"
+source "${HOME}/.functions"
+source "${HOME}/.exports"
