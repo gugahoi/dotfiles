@@ -1,6 +1,8 @@
 vim.pack.add({
     "https://github.com/folke/snacks.nvim",
     "https://github.com/dmtrKovalenko/fff.nvim",
+    "https://github.com/nvim-tree/nvim-web-devicons",
+    "https://github.com/cbochs/grapple.nvim",
 })
 
 vim.api.nvim_create_autocmd("PackChanged", {
@@ -59,6 +61,12 @@ local keymaps = {
     {"<leader>sg", function() require('fff').live_grep() end, desc = 'Live grep'},
     {"<leader>sz", function() require('fff').live_grep({ grep = { modes = { 'fuzzy', 'plain' } } }) end, desc = 'Live fuzy grep',},
     {"<leader>sc", function() require('fff').live_grep({ query = vim.fn.expand("<cword>") }) end, desc = 'Search current word', },
+
+    --- Grapple keymaps
+    { "<leader>m", "<cmd>Grapple toggle<cr>", desc = "Grapple toggle tag" },
+    { "<leader>M", "<cmd>Grapple toggle_tags<cr>", desc = "Grapple open tags window" },
+    { "<leader>n", "<cmd>Grapple cycle_tags next<cr>", desc = "Grapple cycle next tag" },
+    { "<leader>p", "<cmd>Grapple cycle_tags prev<cr>", desc = "Grapple cycle previous tag" },
     -- stylua: ignore end
 }
 
@@ -79,3 +87,16 @@ for _, map in ipairs(keymaps) do
     local mode = map.mode or "n"
     vim.keymap.set(mode, map[1], map[2], opts)
 end
+
+-- Grapple options
+-- opts = {
+--     scope = "git", -- also try out "git_branch"
+-- },
+-- event = { "BufReadPost", "BufNewFile" },
+-- cmd = "Grapple",
+-- keys = {
+--     { "<leader>m", "<cmd>Grapple toggle<cr>", desc = "Grapple toggle tag" },
+--     { "<leader>M", "<cmd>Grapple toggle_tags<cr>", desc = "Grapple open tags window" },
+--     { "<leader>n", "<cmd>Grapple cycle_tags next<cr>", desc = "Grapple cycle next tag" },
+--     { "<leader>p", "<cmd>Grapple cycle_tags prev<cr>", desc = "Grapple cycle previous tag" },
+-- }
