@@ -48,10 +48,6 @@ persistent-workspaces = ["1", "2", "3"]
 
     alt-tab = "workspace-back-and-forth"
 
-    # Not supported, because this command is redundant in AeroSpace mental model.
-    # See: https://nikitabobko.github.io/AeroSpace/guide#floating-windows
-    #alt-space = 'focus toggle_tiling_floating'
-
     # `focus parent`/`focus child` are not yet supported, and it's not clear whether they
     # should be supported at all https://github.com/nikitabobko/AeroSpace/issues/5
     # alt-a = 'focus parent'
@@ -68,7 +64,7 @@ persistent-workspaces = ["1", "2", "3"]
     alt-shift-period = 'move-node-to-workspace 3 --focus-follows-window'
 
     alt-n = ['move-node-to-monitor --wrap-around next', 'focus-monitor --wrap-around next']
-    alt-p = ['move-node-to-monitor prev', 'focus-monitor --wrap-around prev'] 
+    alt-p = ['move-node-to-monitor --wrap-around prev', 'focus-monitor --wrap-around prev'] 
 
     alt-shift-c = 'reload-config'
 
