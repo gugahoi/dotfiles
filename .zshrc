@@ -128,5 +128,5 @@ bindkey -M vicmd '^s' sesh-sessions
 bindkey -M viins '^s' sesh-sessions
 
 source "${HOME}/.aliases"
-source "${HOME}/.functions"
+# source "${HOME}/.functions"
 source "${HOME}/.exports"
