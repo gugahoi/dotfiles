@@ -31,6 +31,7 @@ brew "zoxide"
 
 cask "aerospace"
 cask "appcleaner"
+cask "bitwarden"
 cask "block-goose"
 cask "claude"
 cask "claude-code"
