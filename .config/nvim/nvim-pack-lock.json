@@ -9,6 +9,15 @@
       "src": "https://github.com/saghen/blink.cmp",
       "version": ">=0.0.0"
     },
+    "blink.download": {
+      "rev": "8417652c1d1ec773a68b270a2ee94d606a0e35aa",
+      "src": "https://github.com/saghen/blink.download"
+    },
+    "blink.pairs": {
+      "rev": "5a34bf6ea72340a70083548e186d745ac4882899",
+      "src": "https://github.com/saghen/blink.pairs",
+      "version": ">=0.0.0"
+    },
     "codediff.nvim": {
       "rev": "93cd80c56f71af4671388c568a37d4c84c3ddefa",
       "src": "https://github.com/esmuellert/codediff.nvim"
@@ -22,7 +31,7 @@
       "src": "https://github.com/scottmckendry/cyberdream.nvim"
     },
     "fff.nvim": {
-      "rev": "fcdf4a9172fba824ca6834731b93b74eba51d1c3",
+      "rev": "dd56a3a8a8a5a85522badaf6485f28c8f7a7c840",
       "src": "https://github.com/dmtrKovalenko/fff.nvim"
     },
     "gitsigns.nvim": {
@@ -38,7 +47,7 @@
       "src": "https://github.com/folke/lazydev.nvim"
     },
     "mason-lspconfig.nvim": {
-      "rev": "a676ab7282da8d651e175118bcf54483ca11e46d",
+      "rev": "a979821a975897b88493843301950c456a725982",
       "src": "https://github.com/williamboman/mason-lspconfig.nvim"
     },
     "mason.nvim": {
@@ -50,15 +59,15 @@
       "src": "https://github.com/NeogitOrg/neogit"
     },
     "nvim-lspconfig": {
-      "rev": "4d0724be90b633ddce51b328a631060e6acd7d66",
+      "rev": "841c6d4139aedb8a3f2baf30cef5327371385b93",
       "src": "https://github.com/neovim/nvim-lspconfig"
     },
     "nvim-treesitter": {
-      "rev": "2f5d4c3f3c675962242096bcc8e586d76dd72eb2",
+      "rev": "877f724846f2202a16e311bd19efb954bd1c430e",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "4e91b5d0394329a229725b021a8ea217099826ef",
+      "rev": "7359dfcefa38db632541e1f9b5b5f291626a1d47",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects"
     },
     "nvim-web-devicons": {
@@ -69,8 +78,12 @@
       "rev": "b9fd5226c2f76c951fc8ed5923d85e4de065e509",
       "src": "https://github.com/nvim-lua/plenary.nvim"
     },
+    "sidekick.nvim": {
+      "rev": "8ad0ede3ff9065878a853e4b037ba6ac88231fb0",
+      "src": "https://github.com/folke/sidekick.nvim"
+    },
     "snacks.nvim": {
-      "rev": "a049339328e2599ad6e85a69fa034ac501e921b2",
+      "rev": "e6fd58c82f2f3fcddd3fe81703d47d6d48fc7b9f",
       "src": "https://github.com/folke/snacks.nvim"
     },
     "todo-comments.nvim": {
