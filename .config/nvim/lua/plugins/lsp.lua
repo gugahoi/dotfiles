@@ -1,6 +1,7 @@
 -- Add LSP and related plugins
 vim.pack.add({
     "https://github.com/neovim/nvim-lspconfig",
+    "https://github.com/rafamadriz/friendly-snippets",
     {
         src = "https://github.com/saghen/blink.cmp",
         version = vim.version.range("*"),
