@@ -8,6 +8,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - **tmux** - Tmux configuration
 - **zsh** - Zsh configuration
 - **gh** - GitHub CLI configuration
+- **.pi** - Pi coding agent extensions and config
 - **Brewfile** - Homebrew package list
 
 ## Installation
@@ -35,13 +36,11 @@ Use Stow to create symlinks for configuration files:
 # Stow all packages
 stow .
 
-# Or stow individual packages
-stow nvim
-stow tmux
-stow zsh
+# If files already exist locally, adopt them into this repo and restow
+stow --adopt -R .
 ```
 
-This will create symlinks from the repository files to their target locations in your home directory (e.g., `.config/nvim`, `.zshrc`, etc.).
+This will create symlinks from the repository files to their target locations in your home directory (e.g., `.config/nvim`, `.pi/agent/extensions`, `.zshrc`, etc.).
 
 ## Managing Files
 
@@ -91,12 +90,14 @@ dotfiles/
 ├── .config/
 │   ├── nvim/          # Neovim config
 │   └── gh/            # GitHub CLI config
+├── .pi/
+│   └── agent/
+│       └── extensions/ # Pi coding agent extensions
 ├── .tmux.conf         # Tmux configuration
 ├── .zshrc             # Zsh configuration
 ├── .gitconfig         # Git configuration
 ├── Brewfile           # Homebrew packages
 └── README.md
-```
 
 ## Useful Stow Commands
 
@@ -108,13 +109,10 @@ stow -n .
 stow -v .
 
 # Unstow a package
-stow -D nvim
+stow -D .
 
-# Restow (remove and recreate symlinks)
-stow -R .
-
-# Adopt existing files into the stow directory
-stow -a nvim
+# Adopt existing files into the stow directory and restow
+stow --adopt -R .
 ```
 
 ## Troubleshooting
