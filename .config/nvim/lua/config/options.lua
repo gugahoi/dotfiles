@@ -13,5 +13,8 @@ o.updatetime = 250
 o.splitbelow = true
 o.splitright = true
 
+o.winborder = "rounded"
+o.pumborder = "rounded"
+
 vim.o.list = true
 -- o.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
