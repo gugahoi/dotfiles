@@ -3,7 +3,7 @@ vim.pack.add({
 })
 require("todo-comments").setup()
 
-require("plugins.amp")
+require("plugins.ai")
 require("plugins.format")
 require("plugins.git")
 require("plugins.lsp")
