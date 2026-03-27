@@ -12,3 +12,5 @@
 	pager = delta
 [interactive]
 	difffilter = delta
+[rerere]
+	enabled = true
