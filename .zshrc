@@ -115,7 +115,22 @@ function sesh-sessions() {
         exec </dev/tty
         exec <&1
         local session
-        session=$(sesh list -t -c | fzf --height 40% --reverse --border-label ' sesh ' --border --prompt '⚡  ')
+        session=$(sesh list --icons | fzf \
+            --no-sort --ansi \
+            --border-label ' sesh ' \
+            --border \
+            --prompt '⚡  ' \
+            --height 70% \
+            --header '  ^a all  ^t tmux  ^g configs  ^x zoxide  ^d kill  ^f find' \
+            --bind 'tab:down,btab:up' \
+            --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
+            --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
+            --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
+            --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
+            --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
+            --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
+            --preview-window 'right:55%' \
+            --preview 'sesh preview {}')
         zle reset-prompt > /dev/null 2>&1 || true
         [[ -z "$session" ]] && return
         sesh connect $session
@@ -130,3 +145,10 @@ bindkey -M viins '^s' sesh-sessions
 source "${HOME}/.aliases"
 # source "${HOME}/.functions"
 source "${HOME}/.exports"
+
+# bun completions
+[ -s "/Users/guga/.bun/_bun" ] && source "/Users/guga/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
