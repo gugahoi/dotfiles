@@ -37,3 +37,20 @@ alias lD='ls -D'
 alias lc='ls -1'
 alias ll='ls -l'
 alias la='ll -a'
+
+# wt is a custom function to manage git worktrees using fzf for branch selection.
+wt() {
+    local branch
+    branch=$(git branch -a --format='%(refname:short)' | sed 's|origin/||' | sort -u | fzf --prompt="Branch> ")
+    [ -z "$branch" ] && return
+    # Check if worktree already exists
+    local existing
+    existing=$(git worktree list | grep "\[$branch\]" | awk '{print $1}')
+    if [ -n "$existing" ]; then
+        cd "$existing" || exit
+    else
+        git worktree add "../$branch" "$branch" 2>/dev/null || \
+        git worktree add -b "$branch" "../$branch" main
+        cd "../$branch" || exit
+    fi
+}
