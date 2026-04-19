@@ -41,7 +41,7 @@ local keymaps = {
     -- Top Pickers & Explorer
     { "<leader><space>", function() Snacks.picker.smart() end, desc = "Smart Find Files" },
     { "<leader>fc", function() Snacks.picker.files({ cwd = vim.fn.stdpath("config") }) end, desc = "Find Config File" },
-    -- { "<leader>ff", function() Snacks.picker.files() end, desc = "Find Files" },
+    { "<leader>fl", function() Snacks.picker.files() end, desc = "Find Files (Snacks)" },
     { "<leader>fn", function() Snacks.picker.notifications() end, desc = "Notifications" },
     { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Buffers" },
 
