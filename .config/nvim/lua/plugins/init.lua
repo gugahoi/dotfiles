@@ -1,3 +1,5 @@
+require("vim._core.ui2").enable({})
+
 vim.pack.add({
     "https://github.com/folke/todo-comments.nvim",
     "https://github.com/saghen/blink.download",
