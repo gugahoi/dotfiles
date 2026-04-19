@@ -91,6 +91,13 @@ bindkey "^?" backward-delete-char
 bindkey "^P" up-line-or-search
 bindkey "^N" down-line-or-search
 
+# Edit the current command line in $EDITOR with Ctrl-X Ctrl-E / Ctrl-X E
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey -M emacs '^Xe' edit-command-line
+bindkey -M viins '^Xe' edit-command-line
+bindkey -M vicmd '^Xe' edit-command-line
+
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # fzf setup
