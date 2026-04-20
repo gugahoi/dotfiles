@@ -153,9 +153,8 @@ source "${HOME}/.aliases"
 # source "${HOME}/.functions"
 source "${HOME}/.exports"
 
-# bun completions
-[ -s "/Users/guga/.bun/_bun" ] && source "/Users/guga/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+if type bun &>/dev/null; then
+  [ -s "/Users/guga/.bun/_bun" ] && source "/Users/guga/.bun/_bun"
+  export BUN_INSTALL="$HOME/.bun"
+  export PATH="$BUN_INSTALL/bin:$PATH"
+fi
