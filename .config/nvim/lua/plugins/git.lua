@@ -7,4 +7,4 @@ vim.pack.add({
     "https://github.com/esmuellert/codediff.nvim", -- optional
 })
 
-vim.keymap.set("n", "<leader>gg", "<cmd>Neogit kind=floating<cr>")
+vim.keymap.set("n", "<leader>gg", "<cmd>Neogit<cr>")
