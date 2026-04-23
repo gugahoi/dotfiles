@@ -100,15 +100,7 @@ bindkey -M vicmd '^Xe' edit-command-line
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# fzf setup
-source <(fzf --zsh)
-eval "$(zoxide init zsh)"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
-
-export PATH="$NVM_BIN:/opt/homebrew/bin:$PATH"
 
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
@@ -116,45 +108,79 @@ if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 autoload -Uz compinit
 compinit
 
-# Bind <C-s> to run Sesh from zsh shell
-function sesh-sessions() {
-    {
-        exec </dev/tty
-        exec <&1
-        local session
-        session=$(sesh list --icons | fzf \
-            --no-sort --ansi \
-            --border-label ' sesh ' \
-            --border \
-            --prompt '⚡  ' \
-            --height 70% \
-            --header '  ^a all  ^t tmux  ^g configs  ^x zoxide  ^d kill  ^f find' \
-            --bind 'tab:down,btab:up' \
-            --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
-            --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
-            --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
-            --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
-            --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-            --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
-            --preview-window 'right:55%' \
-            --preview 'sesh preview {}')
-        zle reset-prompt > /dev/null 2>&1 || true
-        [[ -z "$session" ]] && return
-        sesh connect $session
-    }
-}
-
-zle     -N             sesh-sessions
-bindkey -M emacs '^s' sesh-sessions
-bindkey -M vicmd '^s' sesh-sessions
-bindkey -M viins '^s' sesh-sessions
-
 source "${HOME}/.aliases"
 # source "${HOME}/.functions"
 source "${HOME}/.exports"
 
-if type bun &>/dev/null; then
-  [ -s "/Users/guga/.bun/_bun" ] && source "/Users/guga/.bun/_bun"
-  export BUN_INSTALL="$HOME/.bun"
-  export PATH="$BUN_INSTALL/bin:$PATH"
+if command -v -- bun >/dev/null 2>&1; then
+    # bun completions
+    [ -s "/Users/guga/.bun/_bun" ] && source "/Users/guga/.bun/_bun"
+
+    # bun
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+fi
+
+
+# if command is available, source the completion
+# eg.: if fzf is available, source <(fzf --zsh)
+# completion "fzf" "fzf --zsh"
+function completion ()
+{
+    local binary="$1"
+    shift || return 1
+
+    [[ -n "$binary" && $# -gt 0 ]] || return 1
+    command -v -- "$binary" > /dev/null 2>&1 || return 0
+
+    local generator="$*"
+    source <(eval "$generator")
+}
+
+# fzf setup
+completion "fzf" "fzf --zsh"
+completion "opencode" "opencode completion zsh"
+eval "$(zoxide init zsh)"
+
+if command -v -- sesh >/dev/null 2>&1; then
+    # Bind <C-s> to run Sesh from zsh shell
+    function sesh-sessions() {
+        {
+            exec </dev/tty
+            exec <&1
+            local session
+            session=$(sesh list --icons | fzf \
+                    --no-sort --ansi \
+                    --border-label ' sesh ' \
+                    --border \
+                    --prompt '⚡  ' \
+                    --height 70% \
+                    --header '  ^a all  ^t tmux  ^g configs  ^x zoxide  ^d kill  ^f find' \
+                    --bind 'tab:down,btab:up' \
+                    --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
+                    --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
+                    --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
+                    --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
+                    --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
+                    --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
+                    --preview-window 'right:55%' \
+                --preview 'sesh preview {}')
+            zle reset-prompt > /dev/null 2>&1 || true
+            [[ -z "$session" ]] && return
+            sesh connect $session
+        }
+    }
+
+    zle     -N             sesh-sessions
+    bindkey -M emacs '^s' sesh-sessions
+    bindkey -M vicmd '^s' sesh-sessions
+    bindkey -M viins '^s' sesh-sessions
+fi
+
+
+if command -v -- nvm >/dev/null 2>&1; then
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+    [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+    export PATH="$NVM_BIN:/opt/homebrew/bin:$PATH"
 fi
