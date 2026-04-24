@@ -121,6 +121,13 @@ if command -v -- bun >/dev/null 2>&1; then
     export PATH="$BUN_INSTALL/bin:$PATH"
 fi
 
+if command -v -- go >/dev/null 2&>1; then
+    # GOPATH
+    export GOPATH=~/.go
+    export GO111MODULE=on
+    export PATH="$GOPATH/bin:$PATH"
+fi
+
 
 # if command is available, source the completion
 # eg.: if fzf is available, source <(fzf --zsh)
