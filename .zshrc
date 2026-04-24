@@ -41,6 +41,7 @@ completion "firestore" "firestore -p fake completion zsh"
 completion "opencode" "opencode completion zsh"
 completion "op" "op completion zsh" # 1Password CLI
 completion "fzf" "fzf --zsh"
+completion "exercisom" "exercisom completion zsh"
 
 # enable vi mode
 bindkey -v
