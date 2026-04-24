@@ -80,28 +80,12 @@ if command -v -- bun >/dev/null 2>&1; then
     check_and_source "${HOME}/.bun/_bun"
 fi
 
-if command -v -- go >/dev/null 2&>1; then
+if command -v -- go >/dev/null 2>&1; then
     # GOPATH
     export GOPATH=~/.go
     export GO111MODULE=on
     export PATH="$GOPATH/bin:$PATH"
 fi
-
-
-# if command is available, source the completion
-# eg.: if fzf is available, source <(fzf --zsh)
-# completion "fzf" "fzf --zsh"
-function completion ()
-{
-    local binary="$1"
-    shift || return 1
-
-    [[ -n "$binary" && $# -gt 0 ]] || return 1
-    command -v -- "$binary" > /dev/null 2>&1 || return 0
-
-    local generator="$*"
-    source <(eval "$generator")
-}
 
 eval "$(zoxide init zsh)"
 
