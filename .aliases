@@ -40,17 +40,38 @@ alias la='ll -a'
 
 # wt is a custom function to manage git worktrees using fzf for branch selection.
 wt() {
-    local branch
-    branch=$(git branch -a --format='%(refname:short)' | sed 's|origin/||' | sort -u | fzf --prompt="Branch> ")
-    [ -z "$branch" ] && return
-    # Check if worktree already exists
-    local existing
-    existing=$(git worktree list | grep "\[$branch\]" | awk '{print $1}')
-    if [ -n "$existing" ]; then
-        cd "$existing" || exit
-    else
-        git worktree add "../$branch" "$branch" 2>/dev/null || \
-        git worktree add -b "$branch" "../$branch" main
-        cd "../$branch" || exit
-    fi
+	local branch
+	branch=$(git branch -a --format='%(refname:short)' | sed 's|origin/||' | sort -u | fzf --prompt="Branch> ")
+	[ -z "$branch" ] && return
+	# Check if worktree already exists
+	local existing
+	existing=$(git worktree list | grep "\[$branch\]" | awk '{print $1}')
+	if [ -n "$existing" ]; then
+		cd "$existing" || exit
+	else
+		git worktree add "../$branch" "$branch" 2>/dev/null ||
+			git worktree add -b "$branch" "../$branch" main
+		cd "../$branch" || exit
+	fi
+}
+
+# audio allows switching of the audio input and output from the command line
+function audio() {
+	if command -v -- SwitchAudioSource >/dev/null 2>&1; then
+		SwitchAudioSource -t all -s "$(SwitchAudioSource -a -t all | sort -u | fzf)"
+	fi
+}
+
+# speakers allows switching of the audio output from the command line
+function speakers() {
+	if command -v -- SwitchAudioSource >/dev/null 2>&1; then
+		SwitchAudioSource -s "$(SwitchAudioSource -a -t output | fzf)"
+	fi
+}
+
+# mic allows switching of the audio input from the command line
+function mic() {
+	if command -v -- SwitchAudioSource >/dev/null 2>&1; then
+		SwitchAudioSource -t input -s "$(SwitchAudioSource -a -t input | fzf)"
+	fi
 }
