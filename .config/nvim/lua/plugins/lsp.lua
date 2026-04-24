@@ -18,6 +18,7 @@ require("mason").setup()
 require("mason-lspconfig").setup({
     ensure_installed = {
         "gopls",
+        "bashls",
         "lua_ls",
         "ts_ls",
         "tsgo",
@@ -95,6 +96,12 @@ vim.lsp.config("gopls", {
             staticcheck = true,
         },
     },
+})
+
+vim.lsp.config("bashls", {
+    on_attach = on_attach,
+    capabilities = capabilities,
+    filetypes = { "zsh", "bash", "sh" },
 })
 
 -- Setup TypeScript LSP (ts_go)
