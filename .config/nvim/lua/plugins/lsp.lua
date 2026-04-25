@@ -70,10 +70,10 @@ local function setup_keymaps(bufnr)
     -- end, opts)
     vim.keymap.set("n", "<Leader>d", vim.diagnostic.open_float, opts)
     vim.keymap.set("n", "[d", function()
-        vim.diagnostic.jump({ count = -1 })
+        vim.diagnostic.jump({ count = -1, float = true })
     end, opts)
     vim.keymap.set("n", "]d", function()
-        vim.diagnostic.jump({ count = 1 })
+        vim.diagnostic.jump({ count = 1, float = true })
     end, opts)
 end
 
