@@ -4,19 +4,32 @@ vim.pack.add({
 })
 
 require("conform").setup({
+    notify_on_error = true,
     formatters_by_ft = {
         lua = { "stylua" },
-        go = { "goimports", "gofmt" },
-        zsh = { "beautysh" },
-        typescript = { "biome" },
-        typescriptreact = { "biome" },
-        javascript = { "biome" },
-        javascriptreact = { "biome" },
-        json = { "biome" },
+        css = { "biome-check" },
+        javascript = { "biome-check" },
+        javascriptreact = { "biome-check" },
+        typescript = { "biome-check", "prettier" },
+        typescriptreact = { "biome-check", "prettier" },
+        swift = { "swiftlint" },
+        json = { "jq", "biome" },
+        jsonc = { "jq", "biome" },
+        markdown = { "rumdl" },
+        toml = { "biome" },
+        go = { "gofmt", "goimports-reviser", "golines" },
     },
     format_on_save = {
-        timeout_ms = 500,
-        lsp_fallback = true,
+        timeout_ms = 300,
+        lsp_format = "fallback",
+    },
+    formatters = {
+        ["biome-check"] = {
+            require_cwd = true,
+        },
+        ["prettier"] = {
+            require_cwd = true,
+        },
     },
 })
 
