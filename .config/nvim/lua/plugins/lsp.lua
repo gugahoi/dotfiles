@@ -65,6 +65,15 @@ local function setup_keymaps(bufnr)
     vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
     vim.keymap.set("n", "<Leader>rn", vim.lsp.buf.rename, opts)
     vim.keymap.set("n", "<Leader>ca", vim.lsp.buf.code_action, opts)
+    vim.keymap.set("n", "<Leader>cA", function()
+        vim.lsp.buf.code_action({
+            context = { only = { "source" }, diagnostics = {} },
+            -- range = {
+            --     start = { 1, 0 },
+            --     ["end"] = { vim.api.nvim_buf_line_count(0), 0 },
+            -- },
+        })
+    end, opts)
     -- vim.keymap.set("n", "<Leader>f", function()
     -- 	vim.lsp.buf.format({ async = true })
     -- end, opts)
