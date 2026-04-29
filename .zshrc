@@ -44,7 +44,8 @@ completion "fzf" "fzf --zsh"
 completion "exercisom" "exercisom completion zsh"
 
 # enable vi mode
-bindkey -v
+# bindkey -v
+bindkey -e
 
 # delete keys fix for vi mode
 bindkey "^H" backward-delete-char
