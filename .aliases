@@ -38,20 +38,50 @@ alias lc='ls -1'
 alias ll='ls -l'
 alias la='ll -a'
 
+# wtclone clones a repository as a hidden bare repo and creates a worktree for the default branch.
+wtclone() {
+	if [ -z "$1" ]; then
+		echo "Usage: wtclone <repository-url> [directory]"
+		return 1
+	fi
+
+	local repo_url="$1"
+	local dir="${2:-${repo_url##*/}}"
+	dir="${dir%.git}"
+
+	mkdir -p "$dir" || return
+	git clone --bare "$repo_url" "$dir/.bare" || return
+	git -C "$dir/.bare" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+	git -C "$dir/.bare" fetch origin || return
+	printf 'gitdir: ./.bare\n' >"$dir/.git"
+
+	local default_branch
+	default_branch=$(git -C "$dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+	default_branch="${default_branch:-main}"
+
+	git -C "$dir" worktree add "$default_branch" "$default_branch"
+}
+
 # wt is a custom function to manage git worktrees using fzf for branch selection.
 wt() {
 	local branch
 	branch=$(git branch -a --format='%(refname:short)' | sed 's|origin/||' | sort -u | fzf --prompt="Branch> ")
 	[ -z "$branch" ] && return
+
+	local git_common_dir worktree_root worktree_path
+	git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return
+	worktree_root=${git_common_dir%/*}
+	worktree_path="$worktree_root/$branch"
+
 	# Check if worktree already exists
 	local existing
 	existing=$(git worktree list | grep "\[$branch\]" | awk '{print $1}')
 	if [ -n "$existing" ]; then
 		cd "$existing" || exit
 	else
-		git worktree add "../$branch" "$branch" 2>/dev/null ||
-			git worktree add -b "$branch" "../$branch" main
-		cd "../$branch" || exit
+		git worktree add "$worktree_path" "$branch" 2>/dev/null ||
+			git worktree add -b "$branch" "$worktree_path" main
+		cd "$worktree_path" || exit
 	fi
 }
 
