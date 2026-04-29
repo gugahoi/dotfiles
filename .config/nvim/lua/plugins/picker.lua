@@ -3,7 +3,10 @@ vim.pack.add({
     "https://github.com/dmtrKovalenko/fff.nvim",
     "https://github.com/nvim-tree/nvim-web-devicons",
     "https://github.com/cbochs/grapple.nvim",
+    "https://github.com/stevearc/oil.nvim",
 })
+
+require("oil").setup({})
 
 vim.api.nvim_create_autocmd("PackChanged", {
     callback = function(event)
@@ -44,10 +47,10 @@ local keymaps = {
     { "<leader>fl", function() Snacks.picker.files() end, desc = "Find Files (Snacks)" },
     { "<leader>fn", function() Snacks.picker.notifications() end, desc = "Notifications" },
     { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Buffers" },
+    { "<leader>fe", function() Snacks.explorer() end, desc = "File Explorer" },
 
     { "<leader>:", function() Snacks.picker.command_history() end, desc = "Command History" },
     { "<leader>n", function() Snacks.picker.notifications() end, desc = "Notification History" },
-    { "<leader>e", function() Snacks.explorer() end, desc = "File Explorer" },
     -- { "<leader>sg", function() Snacks.picker.grep() end, desc = "Grep" },
     { "<leader>sw", function() Snacks.picker.grep_word() end, desc = "Visual selection or word", mode = { "n", "x" } },
     { "<leader>sm", function() Snacks.picker.man() end, desc = "Man Pages" },
@@ -67,6 +70,9 @@ local keymaps = {
     { "<leader>M", "<cmd>Grapple toggle_tags<cr>", desc = "Grapple open tags window" },
     { "<leader>n", "<cmd>Grapple cycle_tags next<cr>", desc = "Grapple cycle next tag" },
     { "<leader>p", "<cmd>Grapple cycle_tags prev<cr>", desc = "Grapple cycle previous tag" },
+
+    -- Oil Keymaps
+    { "<leader>e", "<cmd>Oil<cr>", desc = "Open file explorer" },
     -- stylua: ignore end
 }
 
