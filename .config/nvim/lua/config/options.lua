@@ -9,6 +9,8 @@ o.showmode = false
 o.signcolumn = "yes"
 o.undofile = true
 o.updatetime = 250
+o.smartcase = true
+o.ignorecase = true
 
 o.splitbelow = true
 o.splitright = true
