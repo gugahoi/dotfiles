@@ -64,24 +64,56 @@ wtclone() {
 
 # wt is a custom function to manage git worktrees using fzf for branch selection.
 wt() {
-	local branch
-	branch=$(git branch -a --format='%(refname:short)' | sed 's|origin/||' | sort -u | fzf --prompt="Branch> ")
+	local branch default_branch local_branch
+	branch=$(git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | command grep -vx HEAD | sort -u | fzf --print-query --prompt="Branch> " | awk '
+		NR == 1 { query = $0; next }
+		{ selected = $0 }
+		END { print (selected != "" ? selected : query) }
+	')
 	[ -z "$branch" ] && return
+	git check-ref-format --branch "$branch" >/dev/null 2>&1 || return
+	local_branch=$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx "$branch")
 
-	local git_common_dir worktree_root worktree_path
+	local git_common_dir bare_worktree worktree_root worktree_path
 	git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return
-	worktree_root=${git_common_dir%/*}
+	bare_worktree=$(git worktree list --porcelain | awk -v common_dir="$git_common_dir" '
+		$1 == "worktree" { path = substr($0, 10) }
+		$1 == "bare" && path == common_dir { print path; exit }
+	')
+	worktree_root=${bare_worktree:-$git_common_dir}
+	worktree_root=${worktree_root%/*}
 	worktree_path="$worktree_root/$branch"
 
 	# Check if worktree already exists
 	local existing
-	existing=$(git worktree list | grep "\[$branch\]" | awk '{print $1}')
+	existing=$(git worktree list --porcelain | awk -v branch="$branch" '
+		$1 == "worktree" { path = substr($0, 10) }
+		$1 == "branch" {
+			ref = $2
+			sub("^refs/heads/", "", ref)
+			sub("^refs/remotes/origin/", "", ref)
+			if (ref == branch) { print path; exit }
+		}
+	')
 	if [ -n "$existing" ]; then
-		cd "$existing" || exit
+		cd "$existing" || return
 	else
-		git worktree add "$worktree_path" "$branch" 2>/dev/null ||
-			git worktree add -b "$branch" "$worktree_path" main
-		cd "$worktree_path" || exit
+		if [ -d "$worktree_path" ] && git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+			cd "$worktree_path" || return
+			return
+		fi
+
+		mkdir -p "${worktree_path%/*}" || return
+		if [ -n "$local_branch" ]; then
+			git worktree add "$worktree_path" "$branch" || return
+		else
+			default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+			default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx main)}
+			default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx master)}
+			git worktree add "$worktree_path" "$branch" 2>/dev/null ||
+				git worktree add -b "$branch" "$worktree_path" "$default_branch" || return
+		fi
+		cd "$worktree_path" || return
 	fi
 }
 
