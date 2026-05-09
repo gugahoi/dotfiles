@@ -44,7 +44,7 @@ local keymaps = {
     -- Top Pickers & Explorer
     { "<leader><space>", function() Snacks.picker.smart() end, desc = "Smart Find Files" },
     { "<leader>fc", function() Snacks.picker.files({ cwd = vim.fn.stdpath("config") }) end, desc = "Find Config File" },
-    { "<leader>fl", function() Snacks.picker.files() end, desc = "Find Files (Snacks)" },
+    { "<leader>ff", function() Snacks.picker.files() end, desc = "Find Files (Snacks)" },
     { "<leader>fn", function() Snacks.picker.notifications() end, desc = "Notifications" },
     { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Buffers" },
     { "<leader>fe", function() Snacks.explorer() end, desc = "File Explorer" },
@@ -60,7 +60,7 @@ local keymaps = {
     { "<leader>ss", function() Snacks.picker.lsp_symbols() end, desc = "Document Symbols" },
 
     -- FFF keymaps
-    {"<leader>ff", function() require("fff").find_files() end,  desc = "Find files" },
+    {"<leader>fl", function() require("fff").find_files() end,  desc = "Find files (fff)" },
     {"<leader>sg", function() require('fff').live_grep() end, desc = 'Live grep'},
     {"<leader>sz", function() require('fff').live_grep({ grep = { modes = { 'fuzzy', 'plain' } } }) end, desc = 'Live fuzy grep',},
     {"<leader>sc", function() require('fff').live_grep({ query = vim.fn.expand("<cword>") }) end, desc = 'Search current word', },
