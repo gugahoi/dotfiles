@@ -147,4 +147,8 @@ if command -v -- bob >/dev/null 2>&1; then
     export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 fi
 
+if [ -d "/opt/homebrew/opt/ruby/bin" ]; then
+    export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+fi
+
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
