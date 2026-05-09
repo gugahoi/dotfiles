@@ -64,7 +64,7 @@ wtclone() {
 
 # wt is a custom function to manage git worktrees using fzf for branch selection.
 wt() {
-	local branch default_branch local_branch
+	local branch default_branch local_branch target_path
 	branch=$(git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | command grep -vx HEAD | sort -u | fzf --print-query --prompt="Branch> " | awk '
 		NR == 1 { query = $0; next }
 		{ selected = $0 }
@@ -96,24 +96,33 @@ wt() {
 		}
 	')
 	if [ -n "$existing" ]; then
-		cd "$existing" || return
+		target_path="$existing"
 	else
 		if [ -d "$worktree_path" ] && git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-			cd "$worktree_path" || return
-			return
-		fi
-
-		mkdir -p "${worktree_path%/*}" || return
-		if [ -n "$local_branch" ]; then
-			git worktree add "$worktree_path" "$branch" || return
+			target_path="$worktree_path"
 		else
-			default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
-			default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx main)}
-			default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx master)}
-			git worktree add "$worktree_path" "$branch" 2>/dev/null ||
-				git worktree add -b "$branch" "$worktree_path" "$default_branch" || return
+			mkdir -p "${worktree_path%/*}" || return
+			if [ -n "$local_branch" ]; then
+				git worktree add "$worktree_path" "$branch" || return
+			else
+				default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx main)}
+				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | command grep -Fx master)}
+				git worktree add "$worktree_path" "$branch" 2>/dev/null ||
+					git worktree add -b "$branch" "$worktree_path" "$default_branch" || return
+			fi
+			target_path="$worktree_path"
 		fi
-		cd "$worktree_path" || return
+	fi
+
+	local session_name
+	session_name=$(printf '%s' "$branch" | tr '/.:' '___')
+
+	if [ -n "$TMUX" ]; then
+		tmux has-session -t "=$session_name" 2>/dev/null || tmux new-session -d -s "$session_name" -c "$target_path" || return
+		tmux switch-client -t "=$session_name"
+	else
+		tmux new-session -A -s "$session_name" -c "$target_path"
 	fi
 }
 
