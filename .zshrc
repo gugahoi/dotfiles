@@ -28,13 +28,29 @@ completion(){
     fi
 }
 
-
 check_and_source "${HOME}/.aliases"
 # source "${HOME}/.functions"
 check_and_source "${HOME}/.exports"
 check_and_source "${HOME}/.cargo/env"
 check_and_source "${HOME}/.deno/env"
 
+# enable vi mode
+# bindkey -v
+bindkey -e
+
+# delete keys fix for vi mode
+bindkey "^H" backward-delete-char
+bindkey "^?" backward-delete-char
+
+bindkey "^P" up-line-or-search
+bindkey "^N" down-line-or-search
+
+# Edit the current command line in $EDITOR with Ctrl-X Ctrl-E / Ctrl-X E
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey -M emacs '^Xe' edit-command-line
+bindkey -M viins '^Xe' edit-command-line
+bindkey -M vicmd '^Xe' edit-command-line
 
 if type brew &>/dev/null; then
     BREW_PREFIX="$(brew --prefix)"
@@ -58,29 +74,11 @@ completion "jj" "jj util completion zsh"
 completion "docker" "docker completion zsh"
 completion "pnpm" "pnpm completion zsh"
 completion "basiq" "basiq completion zsh"
-completion "firestore" "firestore -p fake completion zsh"
+completion "firestore" "firestore completion zsh"
 completion "opencode" "opencode completion zsh"
 completion "op" "op completion zsh" # 1Password CLI
 completion "fzf" "fzf --zsh"
 completion "exercisom" "exercisom completion zsh"
-
-# enable vi mode
-# bindkey -v
-bindkey -e
-
-# delete keys fix for vi mode
-bindkey "^H" backward-delete-char
-bindkey "^?" backward-delete-char
-
-bindkey "^P" up-line-or-search
-bindkey "^N" down-line-or-search
-
-# Edit the current command line in $EDITOR with Ctrl-X Ctrl-E / Ctrl-X E
-autoload -Uz edit-command-line
-zle -N edit-command-line
-bindkey -M emacs '^Xe' edit-command-line
-bindkey -M viins '^Xe' edit-command-line
-bindkey -M vicmd '^Xe' edit-command-line
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
