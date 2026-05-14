@@ -20,8 +20,8 @@ vim.api.nvim_create_autocmd("PackChanged", {
 vim.g.fff = {
     lazy_sync = true, -- start syncing only when the picker is open
     debug = {
-        enabled = true,
-        show_scores = true,
+        enabled = false,
+        show_scores = false,
     },
 }
 
@@ -50,7 +50,6 @@ local keymaps = {
     { "<leader>fe", function() Snacks.explorer() end, desc = "File Explorer" },
 
     { "<leader>:", function() Snacks.picker.command_history() end, desc = "Command History" },
-    { "<leader>n", function() Snacks.picker.notifications() end, desc = "Notification History" },
     -- { "<leader>sg", function() Snacks.picker.grep() end, desc = "Grep" },
     { "<leader>sw", function() Snacks.picker.grep_word() end, desc = "Visual selection or word", mode = { "n", "x" } },
     { "<leader>sm", function() Snacks.picker.man() end, desc = "Man Pages" },

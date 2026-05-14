@@ -3,8 +3,9 @@ vim.pack.add({
 
     -- Neogit deps
     "https://github.com/NeogitOrg/neogit",
-    "https://github.com/nvim-lua/plenary.nvim", -- required
     "https://github.com/esmuellert/codediff.nvim", -- optional
 })
+
+require("gitsigns").setup()
 
 vim.keymap.set("n", "<leader>gg", "<cmd>Neogit<cr>")

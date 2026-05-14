@@ -23,7 +23,7 @@ require("mason-lspconfig").setup({
         "ts_ls",
         "tsgo",
     },
-    automatic_installation = true,
+    automatic_enable = false,
 })
 
 require("lazydev").setup({
@@ -181,3 +181,6 @@ vim.lsp.config("lua_ls", {
         },
     },
 })
+
+-- Keep ts_ls installed but disabled while testing tsgo.
+vim.lsp.enable({ "gopls", "bashls", "tsgo", "lua_ls" })

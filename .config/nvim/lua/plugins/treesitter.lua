@@ -15,7 +15,7 @@ vim.pack.add({
 })
 
 require("nvim-treesitter").setup()
-require("nvim-treesitter").install({
+local parsers = {
     "bash",
     "comment",
     "css",
@@ -33,7 +33,11 @@ require("nvim-treesitter").install({
     "typescript",
     "vim",
     "yaml",
-}, { force = false, summary = false })
+}
+
+vim.api.nvim_create_user_command("TSInstallConfigured", function()
+    require("nvim-treesitter").install(parsers, { force = false })
+end, { desc = "Install configured Treesitter parsers" })
 
 vim.api.nvim_create_autocmd("PackChanged", {
     desc = "Handle nvim-treesitter updates",
@@ -59,19 +63,17 @@ vim.api.nvim_create_autocmd("PackChanged", {
     end,
 })
 
--- Folds
-vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-vim.wo.foldmethod = "expr"
 vim.opt.foldlevel = 99
-
--- Indentation [experimental]
-vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = { "*" },
     callback = function()
         local filetype = vim.bo.filetype
         if filetype and filetype ~= "" then
+            vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+            vim.wo.foldmethod = "expr"
+            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+
             local success = pcall(function()
                 vim.treesitter.start()
             end)

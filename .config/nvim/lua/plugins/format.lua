@@ -36,8 +36,8 @@ require("conform").setup({
 -- Keymaps for formatting
 local opts = { noremap = true, silent = true }
 vim.keymap.set("n", "<Leader>cf", function()
-    require("conform").format({ async = true, lsp_fallback = true })
+    require("conform").format({ async = true, lsp_format = "fallback" })
 end, opts)
 vim.keymap.set("v", "<Leader>cf", function()
-    require("conform").format({ async = true, lsp_fallback = true })
+    require("conform").format({ async = true, lsp_format = "fallback" })
 end, opts)

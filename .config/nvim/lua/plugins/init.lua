@@ -1,6 +1,9 @@
-require("vim._core.ui2").enable({})
+pcall(function()
+    require("vim._core.ui2").enable({})
+end)
 
 vim.pack.add({
+    { src = "https://github.com/nvim-lua/plenary.nvim" },
     { src = "https://github.com/folke/todo-comments.nvim" },
     { src = "https://github.com/saghen/blink.download" },
     {
