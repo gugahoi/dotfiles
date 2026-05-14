@@ -32,7 +32,7 @@ persistent-workspaces = ["1", "2", "3"]
     alt-shift-l = 'move right'
 
 
-    alt-f = 'fullscreen'
+    alt-z = 'fullscreen'
 
     # alt-s = 'layout v_tiles' # 'layout stacking' in i3
     alt-w = 'layout h_accordion' # 'layout tabbed' in i3
