@@ -5,10 +5,26 @@ check_and_source() {
     test -e "$1" && source "$1"
 }
 
+load_nvm() {
+    unset -f nvm node npm npx
+    export NVM_DIR="$HOME/.nvm"
+
+    [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ] && source "$BREW_PREFIX/opt/nvm/nvm.sh"
+    [ -s "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && source "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+}
+
 # completion setups up cmd completion for a given tool if it is installed
 completion(){
     if type "$1" &>/dev/null; then
-        source <(eval "$2")
+        local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions"
+        local cache_file="$cache_dir/$1.zsh"
+
+        if [[ ! -s "$cache_file" || "$cache_file" -ot "$(command -v "$1")" ]]; then
+            mkdir -p "$cache_dir"
+            eval "$2" >| "$cache_file"
+        fi
+
+        source "$cache_file"
     fi
 }
 
@@ -21,16 +37,21 @@ check_and_source "${HOME}/.deno/env"
 
 
 if type brew &>/dev/null; then
-    export FPATH="$(brew --prefix)/share/zsh/site-functions:$(brew --prefix)/share/zsh-completions:${FPATH}"
+    BREW_PREFIX="$(brew --prefix)"
+    export FPATH="$BREW_PREFIX/share/zsh/site-functions:$BREW_PREFIX/share/zsh-completions:${FPATH}"
     autoload -Uz compinit
     compinit
 
-    check_and_source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
-    check_and_source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
-    check_and_source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+    check_and_source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    check_and_source "$BREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
+    check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
 
-    check_and_source "$(brew --prefix)/opt/nvm/nvm.sh"
-    check_and_source "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
+    if [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ]; then
+        nvm() { load_nvm; nvm "$@"; }
+        node() { load_nvm; node "$@"; }
+        npm() { load_nvm; npm "$@"; }
+        npx() { load_nvm; npx "$@"; }
+    fi
 fi
 
 completion "jj" "jj util completion zsh"
@@ -125,13 +146,6 @@ if command -v -- sesh >/dev/null 2>&1; then
     bindkey -M viins '^[f' sesh-sessions
 fi
 
-
-if command -v -- nvm >/dev/null 2>&1; then
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-    [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
-    export PATH="$NVM_BIN:/opt/homebrew/bin:$PATH"
-fi
 
 # pnpm
 if command -v -- pnpm >/dev/null 2>&1; then
