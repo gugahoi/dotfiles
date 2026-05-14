@@ -91,7 +91,7 @@ fi
 eval "$(zoxide init zsh)"
 
 if command -v -- sesh >/dev/null 2>&1; then
-    # Bind <C-s> to run Sesh from zsh shell
+    # Bind <M-f> to run Sesh from zsh shell
     function sesh-sessions() {
         {
             exec </dev/tty
@@ -120,9 +120,9 @@ if command -v -- sesh >/dev/null 2>&1; then
     }
 
     zle     -N             sesh-sessions
-    bindkey -M emacs '^s' sesh-sessions
-    bindkey -M vicmd '^s' sesh-sessions
-    bindkey -M viins '^s' sesh-sessions
+    bindkey -M emacs '^[f' sesh-sessions
+    bindkey -M vicmd '^[f' sesh-sessions
+    bindkey -M viins '^[f' sesh-sessions
 fi
 
 
