@@ -20,6 +20,7 @@ require("mason-lspconfig").setup({
         "gopls",
         "bashls",
         "lua_ls",
+        "cssmodules_ls",
         "ts_ls",
         "tsgo",
     },
@@ -59,7 +60,14 @@ local capabilities = require("blink.cmp").get_lsp_capabilities()
 local function setup_keymaps(bufnr)
     local opts = { noremap = true, silent = true, buffer = bufnr }
     vim.keymap.set("n", "gd", function()
-        require("snacks").picker.lsp_definitions()
+        require("snacks").picker.lsp_definitions({
+            transform = function(item)
+                if item.file and item.file:match("/vite/client%.d%.ts$") then
+                    return false
+                end
+                return item
+            end,
+        })
     end, opts)
     vim.keymap.set("n", "gD", function()
         require("snacks").picker.lsp_declarations()
@@ -143,6 +151,14 @@ vim.lsp.config("tsgo", {
     capabilities = capabilities,
 })
 
+-- CSS Modules LSP adds class-name completion and definitions from TS/TSX into
+-- the corresponding .module.css files. TypeScript itself resolves these to
+-- Vite's ambient module declaration instead.
+vim.lsp.config("cssmodules_ls", {
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
+
 -- Setup TypeScript LSP (ts_ls)
 vim.lsp.config("ts_ls", {
     on_attach = on_attach,
@@ -183,4 +199,4 @@ vim.lsp.config("lua_ls", {
 })
 
 -- Keep ts_ls installed but disabled while testing tsgo.
-vim.lsp.enable({ "gopls", "bashls", "tsgo", "lua_ls" })
+vim.lsp.enable({ "gopls", "bashls", "cssmodules_ls", "tsgo", "lua_ls" })
