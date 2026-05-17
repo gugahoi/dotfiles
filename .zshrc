@@ -35,8 +35,8 @@ check_and_source "${HOME}/.cargo/env"
 check_and_source "${HOME}/.deno/env"
 
 # enable vi mode
-# bindkey -v
-bindkey -e
+bindkey -v
+# bindkey -e
 
 # delete keys fix for vi mode
 bindkey "^H" backward-delete-char
