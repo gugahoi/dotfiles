@@ -22,7 +22,6 @@ require("mason-lspconfig").setup({
         "lua_ls",
         "cssmodules_ls",
         "ts_ls",
-        "tsgo",
     },
     automatic_enable = false,
 })
@@ -145,12 +144,6 @@ vim.lsp.config("bashls", {
     filetypes = { "zsh", "bash", "sh" },
 })
 
--- Setup TypeScript LSP (ts_go)
-vim.lsp.config("tsgo", {
-    on_attach = on_attach,
-    capabilities = capabilities,
-})
-
 -- CSS Modules LSP adds class-name completion and definitions from TS/TSX into
 -- the corresponding .module.css files. TypeScript itself resolves these to
 -- Vite's ambient module declaration instead.
@@ -198,5 +191,4 @@ vim.lsp.config("lua_ls", {
     },
 })
 
--- Keep ts_ls installed but disabled while testing tsgo.
-vim.lsp.enable({ "gopls", "bashls", "cssmodules_ls", "tsgo", "lua_ls" })
+vim.lsp.enable({ "gopls", "bashls", "cssmodules_ls", "ts_ls", "lua_ls" })
