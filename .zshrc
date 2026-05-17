@@ -61,6 +61,7 @@ if type brew &>/dev/null; then
     check_and_source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
+    check_and_source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
     if [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ]; then
         nvm() { load_nvm; nvm "$@"; }
