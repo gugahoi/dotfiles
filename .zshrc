@@ -45,6 +45,15 @@ bindkey "^?" backward-delete-char
 bindkey "^P" up-line-or-search
 bindkey "^N" down-line-or-search
 
+bindkey -M viins "^A" beginning-of-line
+bindkey -M viins "^B" backward-char
+bindkey -M viins "^F" forward-char
+bindkey -M viins "^E" end-of-line
+bindkey -M viins "^K" kill-line
+bindkey -M viins "^U" backward-kill-line
+bindkey -M viins "^W" backward-kill-word
+bindkey -M viins "^Y" yank
+
 # Edit the current command line in $EDITOR with Ctrl-X Ctrl-E / Ctrl-X E
 autoload -Uz edit-command-line
 zle -N edit-command-line
