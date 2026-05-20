@@ -11,6 +11,10 @@ o.undofile = true
 o.updatetime = 250
 o.smartcase = true
 o.ignorecase = true
+o.cursorline = true
+
+o.number = true
+o.relativenumber = true
 
 o.splitbelow = true
 o.splitright = true
