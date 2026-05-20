@@ -152,6 +152,11 @@ vim.lsp.config("cssmodules_ls", {
     capabilities = capabilities,
 })
 
+vim.lsp.config("cssls", {
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
+
 -- Setup TypeScript LSP (ts_ls)
 vim.lsp.config("ts_ls", {
     on_attach = on_attach,
@@ -191,4 +196,11 @@ vim.lsp.config("lua_ls", {
     },
 })
 
-vim.lsp.enable({ "gopls", "bashls", "cssmodules_ls", "ts_ls", "lua_ls" })
+vim.lsp.enable({
+    "gopls",
+    "bashls",
+    "cssmodules_ls",
+    "ts_ls",
+    "lua_ls",
+    "cssls",
+})
