@@ -5,14 +5,6 @@ check_and_source() {
     test -e "$1" && source "$1"
 }
 
-load_nvm() {
-    unset -f nvm node npm npx
-    export NVM_DIR="$HOME/.nvm"
-
-    [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ] && source "$BREW_PREFIX/opt/nvm/nvm.sh"
-    [ -s "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && source "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
-}
-
 # completion setups up cmd completion for a given tool if it is installed
 completion(){
     if type "$1" &>/dev/null; then
@@ -71,12 +63,8 @@ if type brew &>/dev/null; then
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
     check_and_source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-
-    if [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ]; then
-        nvm() { load_nvm; nvm "$@"; }
-        node() { load_nvm; node "$@"; }
-        npm() { load_nvm; npm "$@"; }
-        npx() { load_nvm; npx "$@"; }
+    if command -v -- fnm >/dev/null 2>&1; then
+      eval "$(fnm env --use-on-cd --shell zsh)"
     fi
 fi
 
@@ -93,7 +81,6 @@ completion "exercisom" "exercisom completion zsh"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
-
 
 # pure prompt
 autoload -U promptinit
