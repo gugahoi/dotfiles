@@ -39,6 +39,10 @@ Snacks.setup({
     },
 })
 
+vim.api.nvim_create_user_command("Snacks", function()
+    Snacks.picker()
+end, {})
+
 local keymaps = {
     -- stylua: ignore start
     -- Top Pickers & Explorer
