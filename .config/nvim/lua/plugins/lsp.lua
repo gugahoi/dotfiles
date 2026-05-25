@@ -157,6 +157,11 @@ vim.lsp.config("cssls", {
     capabilities = capabilities,
 })
 
+vim.lsp.config("jsonls", {
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
+
 -- Setup TypeScript LSP (ts_ls)
 vim.lsp.config("ts_ls", {
     on_attach = on_attach,
@@ -197,10 +202,11 @@ vim.lsp.config("lua_ls", {
 })
 
 vim.lsp.enable({
-    "gopls",
     "bashls",
-    "cssmodules_ls",
-    "ts_ls",
-    "lua_ls",
     "cssls",
+    "cssmodules_ls",
+    "gopls",
+    "jsonls",
+    "lua_ls",
+    "ts_ls",
 })
