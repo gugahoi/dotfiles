@@ -121,12 +121,12 @@ if command -v -- sesh >/dev/null 2>&1; then
                     --height 70% \
                     --header '  ^a all  ^t tmux  ^g configs  ^x zoxide  ^d kill  ^f find' \
                     --bind 'tab:down,btab:up' \
-                    --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
-                    --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
-                    --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
-                    --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
+                    --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons --hide-attached)' \
+                    --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons --hide-attached)' \
+                    --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons --hide-attached)' \
+                    --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons --hide-attached)' \
                     --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-                    --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
+                    --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons --hide-attached)' \
                     --preview-window 'right:55%' \
                 --preview 'sesh preview {}')
             zle reset-prompt > /dev/null 2>&1 || true
