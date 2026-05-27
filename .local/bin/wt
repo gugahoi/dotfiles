@@ -126,6 +126,18 @@ cmd_switch() {
 	fi
 }
 
+# show_help prints the command usage and details
+show_help() {
+	echo "wt - Git Worktree Manager with Tmux integration"
+	echo
+	echo "Usage:"
+	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
+	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
+	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
+	echo "  wt list             List all active worktrees"
+	echo "  wt -h | --help      Show this help documentation"
+}
+
 # Main command dispatcher
 case "${1:-}" in
 --delete-branch)
@@ -136,6 +148,9 @@ rm | delete)
 	;;
 list)
 	git worktree list
+	;;
+-h | --help)
+	show_help
 	;;
 *)
 	cmd_switch
