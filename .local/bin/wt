@@ -17,10 +17,14 @@
 
 set -u
 
+# Resolve the absolute path of this script to ensure subprocesses (like fzf reload) can find it
+SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")
+
 # delete_branch_and_worktree finds and removes the worktree associated with the branch,
 # and then deletes the local branch itself.
 delete_branch_and_worktree() {
 	local branch="$1"
+	branch="${branch% [wt]}"
 	[ -z "$branch" ] && return
 
 	# 1. Find worktree path for this branch
@@ -62,14 +66,57 @@ cmd_delete() {
 	fi
 }
 
+# cmd_list_branches outputs all branches and appends [wt] if they have an active worktree,
+# filtering out the current branch, and sorting active worktrees at the bottom.
+cmd_list_branches() {
+	local wt_branches current_branch
+	wt_branches=$(git worktree list --porcelain 2>/dev/null | awk '$1 == "branch" { sub("^refs/heads/", "", $2); print $2 }' || true)
+	current_branch=$(git branch --show-current 2>/dev/null || true)
+
+	export wt_list="$wt_branches"
+	export current_branch="$current_branch"
+	git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u | awk '
+		BEGIN {
+			split(ENVIRON["wt_list"], lines, "\n")
+			for (i in lines) {
+				if (lines[i] != "") {
+					wt[lines[i]] = 1
+				}
+			}
+			cur = ENVIRON["current_branch"]
+			wt_count = 0
+			regular_count = 0
+		}
+		{
+			if ($0 == cur || $0 == "") {
+				next
+			}
+			if ($0 in wt) {
+				wt_lines[wt_count++] = $0 " [wt]"
+			} else {
+				regular_lines[regular_count++] = $0
+			}
+		}
+		END {
+			for (i = 0; i < wt_count; i++) {
+				print wt_lines[i]
+			}
+			for (i = 0; i < regular_count; i++) {
+				print regular_lines[i]
+			}
+		}
+	'
+}
+
 # cmd_switch lists all branches, allowing switching/creating with Ctrl-X keybinding for deletion
 cmd_switch() {
 	local branch default_branch local_branch target_path
-	branch=$(git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u | fzf --print-query --prompt="Branch> " --header="Ctrl-X: Delete branch & worktree" --bind "ctrl-x:execute-silent(\"$0\" --delete-branch {})+reload(git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u)" | awk '
+	branch=$("$SCRIPT_PATH" --list-branches | fzf --print-query --prompt="Branch> " --header="Ctrl-X: Delete branch & worktree" --bind "ctrl-x:execute-silent(\"$SCRIPT_PATH\" --delete-branch {1})+reload(\"$SCRIPT_PATH\" --list-branches)" | awk '
 		NR == 1 { query = $0; next }
 		{ selected = $0 }
 		END { print (selected != "" ? selected : query) }
 	')
+	branch="${branch% [wt]}"
 	[ -z "$branch" ] && return 0
 	git check-ref-format --branch "$branch" >/dev/null 2>&1 || return 1
 	local_branch=$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx "$branch" || true)
@@ -140,6 +187,9 @@ show_help() {
 
 # Main command dispatcher
 case "${1:-}" in
+--list-branches)
+	cmd_list_branches
+	;;
 --delete-branch)
 	delete_branch_and_worktree "$2"
 	;;
