@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+#
+# wt - Git Worktree Manager with Tmux integration
+#
+# Description:
+#   This script automates Git worktree creation and navigation, pairing it 
+#   with TMUX sessions. It provides an interactive fuzzy search selection (fzf)
+#   for choosing branches and automatically creates worktrees and TMUX sessions 
+#   if they don't already exist.
+#
+# Usage:
+#   wt             : Interactively select a branch to switch to (creating worktree if needed)
+#                    - Press [Ctrl-x] inside the selection menu to delete the worktree and branch
+#   wt rm | delete : Interactively select a worktree to remove (with a confirmation prompt)
+#   wt list        : List all active worktrees
+#
+
+set -euo pipefail
+
+# delete_branch_and_worktree finds and removes the worktree associated with the branch,
+# and then deletes the local branch itself.
+delete_branch_and_worktree() {
+	local branch="$1"
+	[ -z "$branch" ] && return
+
+	# 1. Find worktree path for this branch
+	local worktree_path
+	worktree_path=$(git worktree list --porcelain | awk -v branch="$branch" '
+		$1 == "worktree" { path = substr($0, 10) }
+		$1 == "branch" {
+			ref = $2
+			sub("^refs/heads/", "", ref)
+			sub("^refs/remotes/origin/", "", ref)
+			if (ref == branch) { print path; exit }
+		}
+	')
+
+	# 2. If worktree exists, remove it
+	if [ -n "$worktree_path" ]; then
+		git worktree remove "$worktree_path" >/dev/null 2>&1 || git worktree remove --force "$worktree_path" >/dev/null 2>&1 || true
+	fi
+
+	# 3. Delete the local branch
+	git branch -D "$branch" >/dev/null 2>&1 || true
+}
+
+# cmd_delete allows interactive deletion of worktrees via a standalone subcommand
+cmd_delete() {
+	local selected
+	selected=$(git worktree list | fzf --height 40% --prompt="Select worktree to delete> ")
+	[ -z "$selected" ] && return 0
+
+	local path branch
+	path=$(echo "$selected" | awk '{print $1}')
+	branch=$(echo "$selected" | awk '{print $3}' | tr -d '[]')
+
+	echo "Are you sure you want to delete worktree at: $path and branch $branch? (y/N)"
+	read -r response
+	if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+		delete_branch_and_worktree "$branch"
+		echo "Worktree and branch removed."
+	fi
+}
+
+# cmd_switch lists all branches, allowing switching/creating with Ctrl-X keybinding for deletion
+cmd_switch() {
+	local branch default_branch local_branch target_path
+	branch=$(git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u | fzf --print-query --prompt="Branch> " --header="Ctrl-X: Delete branch & worktree" --bind "ctrl-x:execute-silent(\"$0\" --delete-branch {})+reload(git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u)" | awk '
+		NR == 1 { query = $0; next }
+		{ selected = $0 }
+		END { print (selected != "" ? selected : query) }
+	')
+	[ -z "$branch" ] && return 0
+	git check-ref-format --branch "$branch" >/dev/null 2>&1 || return 1
+	local_branch=$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx "$branch" || true)
+
+	local git_common_dir bare_worktree worktree_root worktree_path
+	git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 1
+	bare_worktree=$(git worktree list --porcelain | awk -v common_dir="$git_common_dir" '
+		$1 == "worktree" { path = substr($0, 10) }
+		$1 == "bare" && path == common_dir { print path; exit }
+	')
+	worktree_root=${bare_worktree:-$git_common_dir}
+	worktree_root=${worktree_root%/*}
+	worktree_path="$worktree_root/$branch"
+
+	# Check if worktree already exists
+	local existing
+	existing=$(git worktree list --porcelain | awk -v branch="$branch" '
+		$1 == "worktree" { path = substr($0, 10) }
+		$1 == "branch" {
+			ref = $2
+			sub("^refs/heads/", "", ref)
+			sub("^refs/remotes/origin/", "", ref)
+			if (ref == branch) { print path; exit }
+		}
+	')
+	if [ -n "$existing" ]; then
+		target_path="$existing"
+	else
+		if [ -d "$worktree_path" ] && git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+			target_path="$worktree_path"
+		else
+			mkdir -p "${worktree_path%/*}" || return 1
+			if [ -n "$local_branch" ]; then
+				git worktree add "$worktree_path" "$branch" || return 1
+			else
+				default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||' || true)
+				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx main || true)}
+				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx master || true)}
+				git worktree add "$worktree_path" "$branch" 2>/dev/null ||
+					git worktree add -b "$branch" "$worktree_path" "$default_branch" || return 1
+			fi
+			target_path="$worktree_path"
+		fi
+	fi
+
+	local session_name
+	session_name=$(printf '%s' "$branch" | tr '/.:' '___')
+
+	if [ -n "${TMUX:-}" ]; then
+		tmux has-session -t "=$session_name" 2>/dev/null || tmux new-session -d -s "$session_name" -c "$target_path" || return 1
+		tmux switch-client -t "=$session_name"
+	else
+		tmux new-session -A -s "$session_name" -c "$target_path"
+	fi
+}
+
+# Main command dispatcher
+case "${1:-}" in
+--delete-branch)
+	delete_branch_and_worktree "$2"
+	;;
+rm | delete)
+	cmd_delete
+	;;
+list)
+	git worktree list
+	;;
+*)
+	cmd_switch
+	;;
+esac
