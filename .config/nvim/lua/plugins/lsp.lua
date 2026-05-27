@@ -112,6 +112,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 { autotrigger = true }
             )
         end
+        setup_keymaps(ev.buf)
     end,
 })
 vim.opt.complete:append("o")
