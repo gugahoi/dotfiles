@@ -146,3 +146,7 @@ function mic() {
 		SwitchAudioSource -t input -s "$(SwitchAudioSource -a -t input | fzf)"
 	fi
 }
+
+function localserver() {
+	python3 -m http.server 8000
+}
