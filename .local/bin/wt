@@ -15,7 +15,7 @@
 #   wt list        : List all active worktrees
 #
 
-set -euo pipefail
+set -u
 
 # delete_branch_and_worktree finds and removes the worktree associated with the branch,
 # and then deletes the local branch itself.
