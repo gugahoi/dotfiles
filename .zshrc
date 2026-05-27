@@ -113,7 +113,7 @@ if command -v -- sesh >/dev/null 2>&1; then
             exec </dev/tty
             exec <&1
             local session
-            session=$(sesh list --icons | fzf \
+            session=$(sesh list --hide-attached --hide-duplicates --icons | fzf \
                     --no-sort --ansi \
                     --border-label ' sesh ' \
                     --border \
