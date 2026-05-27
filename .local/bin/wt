@@ -48,6 +48,65 @@ delete_branch_and_worktree() {
 	git branch -D "$branch" >/dev/null 2>&1 || true
 }
 
+# Helper to extract repo name from URL
+get_repo_name() {
+	local url="$1"
+	local name="${url%.git}"
+	name="${name##*/}"
+	name="${name##*:}"
+	echo "$name"
+}
+
+# cmd_clone clones a repo as bare and configures it for worktrees
+cmd_clone() {
+	local repo_url="${1:-}"
+	if [ -z "$repo_url" ]; then
+		echo "Usage: wt clone <repo_url> [<directory>]" >&2
+		return 1
+	fi
+
+	local repo_name
+	repo_name=$(get_repo_name "$repo_url")
+	local target_dir="${2:-$repo_name}"
+
+	if [ -e "$target_dir" ]; then
+		echo "Error: Target directory '$target_dir' already exists." >&2
+		return 1
+	fi
+
+	echo "Cloning bare repository into '$target_dir/.bare'..."
+	mkdir -p "$target_dir" || return 1
+
+	(
+		cd "$target_dir" || exit 1
+		git clone --bare "$repo_url" .bare || exit 1
+		echo "gitdir: ./.bare" > .git
+		git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+
+		local primary_branch
+		primary_branch=$(git --git-dir=.bare symbolic-ref --short HEAD 2>/dev/null || true)
+		primary_branch="${primary_branch#refs/heads/}"
+
+		if [ -z "$primary_branch" ]; then
+			primary_branch="main"
+		fi
+
+		echo "Creating first worktree for branch '$primary_branch'..."
+		git worktree add "$primary_branch" || exit 1
+
+		local target_path session_name
+		target_path="$(pwd -P)/$primary_branch"
+		session_name=$(printf '%s' "$primary_branch" | tr '/.:' '___')
+
+		if [ -n "${TMUX:-}" ]; then
+			tmux has-session -t "=$session_name" 2>/dev/null || tmux new-session -d -s "$session_name" -c "$target_path" || exit 1
+			tmux switch-client -t "=$session_name"
+		else
+			tmux new-session -A -s "$session_name" -c "$target_path"
+		fi
+	)
+}
+
 # cmd_delete allows interactive deletion of worktrees via a standalone subcommand
 cmd_delete() {
 	local selected
@@ -190,6 +249,7 @@ show_help() {
 	echo "Usage:"
 	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
 	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
+	echo "  wt clone <url> [dir] Clone a repository as bare and set up worktrees"
 	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
 	echo "  wt list             List all active worktrees"
 	echo "  wt -h | --help      Show this help documentation"
@@ -202,6 +262,9 @@ case "${1:-}" in
 	;;
 --delete-branch)
 	delete_branch_and_worktree "$2"
+	;;
+clone)
+	cmd_clone "${2:-}" "${3:-}"
 	;;
 rm | delete)
 	cmd_delete
