@@ -65,7 +65,7 @@ if type brew &>/dev/null; then
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
     check_and_source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
     if command -v -- fnm >/dev/null 2>&1; then
-      eval "$(fnm env --use-on-cd --shell zsh)"
+        eval "$(fnm env --use-on-cd --shell zsh)"
     fi
 fi
 
