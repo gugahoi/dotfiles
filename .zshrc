@@ -59,6 +59,7 @@ if type brew &>/dev/null; then
     autoload -Uz compinit
     compinit
 
+    eval "$(/opt/homebrew/bin/brew shellenv)"
     check_and_source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
@@ -78,7 +79,6 @@ completion "op" "op completion zsh" # 1Password CLI
 completion "fzf" "fzf --zsh"
 completion "exercisom" "exercisom completion zsh"
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
 
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
