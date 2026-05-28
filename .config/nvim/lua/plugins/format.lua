@@ -15,6 +15,8 @@ require("conform").setup({
         swift = { "swiftlint" },
         json = { "jq", "biome" },
         jsonc = { "jq", "biome" },
+        bash = { "beautysh" },
+        zsh = { "beautysh" },
         markdown = { "rumdl" },
         toml = { "biome" },
         go = { "gofmt", "goimports-reviser", "golines" },
