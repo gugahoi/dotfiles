@@ -78,7 +78,19 @@ persistent-workspaces = ["1", "2", "3"]
     esc = 'mode main'
 
 [workspace-to-monitor-force-assignment]
-    1 = 1
-    2 = 2
-    3 = 3 
+    1 = ['PHL', 1]
+    2 = ['27G2G4', 2] # 27G is the AOC monitor I have at home
+    3 = ['built-in', 3]
+
+[[on-window-detected]]
+if.app-id = 'com.spotify.client'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-id = 'org.ferdium.ferdium-app'
+run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.mail'
+run = 'move-node-to-workspace 3'
 
