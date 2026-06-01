@@ -101,22 +101,26 @@ local function setup_keymaps(bufnr)
     end, opts)
 end
 
-vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(ev)
-        local client = assert(vim.lsp.get_client_by_id(ev.data.client_id))
-        if client:supports_method("textDocument/completion") then
-            vim.lsp.completion.enable(
-                true,
-                client.id,
-                ev.buf,
-                { autotrigger = true }
-            )
-        end
-        setup_keymaps(ev.buf)
-    end,
-})
-vim.opt.complete:append("o")
-vim.opt.completeopt = { "menuone", "noselect" }
+-- Setup native autocompletion
+-- NOTE: this conflicts with the blink plugin and we get double autocompletion
+-- menus so I'm disabling this for now.
+
+-- vim.api.nvim_create_autocmd("LspAttach", {
+--     callback = function(ev)
+--         local client = assert(vim.lsp.get_client_by_id(ev.data.client_id))
+--         if client:supports_method("textDocument/completion") then
+--             vim.lsp.completion.enable(
+--                 true,
+--                 client.id,
+--                 ev.buf,
+--                 { autotrigger = true }
+--             )
+--         end
+--         setup_keymaps(ev.buf)
+--     end,
+-- })
+-- vim.opt.complete:append("o")
+-- vim.opt.completeopt = { "menuone", "noselect" }
 
 -- Attach keymaps on LSP attach
 ---@diagnostic disable-next-line: unused-local
