@@ -1,3 +1,30 @@
 #:schema https://github.com/joshmedeski/sesh/raw/main/sesh.schema.json
 dir_length = 1
 sort_order = ["tmux", "config"]
+blacklist = [
+  "aider *",
+  "amazon_q *",
+  "claude *",
+  "codex *",
+  "copilot *",
+  "crush *",
+  "cursor *",
+  "gemini *",
+  "grok *",
+  "opencode *",
+  "pi *",
+  "qwen *",
+]
+
+[[session]]
+name = "Cayde"
+path = "~"
+startup_command = "ssh cayde"
+
+[[session]]
+name = "flux/master"
+path = "~/Projects/worktrees/flux/master/"
+
+[[session]]
+name = "dotfiles"
+path = "~/Projects/gugahoi/dotfiles/"
