@@ -12,6 +12,10 @@ vim.pack.add({
         src = "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
         branch = "main",
     },
+    {
+        src = "https://github.com/windwp/nvim-ts-autotag",
+        branch = "main",
+    },
 })
 
 require("nvim-treesitter").setup()
@@ -183,3 +187,20 @@ vim.keymap.set({ "n", "x", "o" }, "[]", function()
         "textobjects"
     )
 end)
+
+require("nvim-ts-autotag").setup({
+    opts = {
+        -- Defaults
+        enable_close = true, -- Auto close tags
+        enable_rename = true, -- Auto rename pairs of tags
+        enable_close_on_slash = false, -- Auto close on trailing </
+    },
+    -- Also override individual filetype configs, these take priority.
+    -- Empty by default, useful if one of the "opts" global settings
+    -- doesn't work well in a specific filetype
+    per_filetype = {
+        ["html"] = {
+            enable_close = false,
+        },
+    },
+})
