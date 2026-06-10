@@ -17,9 +17,12 @@ blacklist = [
 ]
 
 [[session]]
-name = "Cayde"
-path = "~"
+name = "server/cayde"
 startup_command = "ssh cayde"
+
+[[session]]
+name = "server/ikora"
+startup_command = "ssh ikora"
 
 [[session]]
 name = "flux/master"
