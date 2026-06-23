@@ -6,6 +6,7 @@ window-padding-color = extend-always
 window-padding-balance = true
 shell-integration-features = true
 keybind = shift+enter=text:\x1b\r
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
 # shell-integration-features=ssh-terminfo,ssh-env
 
 notify-on-command-finish = unfocused
