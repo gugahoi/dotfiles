@@ -9,6 +9,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - **zsh** - Zsh configuration
 - **gh** - GitHub CLI configuration
 - **.pi** - Pi coding agent extensions and config
+- **.claude** - Claude Code hooks and scripts
 - **Brewfile** - Homebrew package list
 
 ## Installation
