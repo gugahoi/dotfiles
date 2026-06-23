@@ -1,7 +1,23 @@
 local map = vim.keymap.set
 
-map("n", "<leader>bd", ":bdelete<cr>", { silent = true })
-map("n", "<leader>bD", ":bdelete!<cr>", { silent = true })
+map(
+    "n",
+    "<leader>bd",
+    ":bdelete<cr>",
+    { silent = true, desc = "Close current buffer" }
+)
+map(
+    "n",
+    "<leader>bD",
+    ":bdelete!<cr>",
+    { silent = true, desc = "Close current buffer (force)" }
+)
+map(
+    "n",
+    "<leader>bo",
+    ":%bd|e#|bd#<cr>",
+    { desc = "Close other buffers", silent = true }
+)
 map("n", "<Esc>", ":nohlsearch<cr>", { silent = true })
 
 -- Exit terminal mode
