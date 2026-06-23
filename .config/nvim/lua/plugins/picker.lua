@@ -54,6 +54,7 @@ local keymaps = {
     { "<leader>fc", function() Snacks.picker.files({ cwd = vim.fn.stdpath("config") }) end, desc = "Find Config File" },
     { "<leader>ff", function() Snacks.picker.files() end, desc = "Find Files (Snacks)" },
     { "<leader>fh", function() Snacks.picker.recent() end, desc = "Find Recent Files (Snacks)" },
+    { "<leader>fr", function() Snacks.picker.resume() end, desc = "Find: Resume (Snacks)" },
     { "<leader>fn", function() Snacks.picker.notifications() end, desc = "Notifications" },
     { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Buffers" },
     { "<leader>fe", function() Snacks.explorer() end, desc = "File Explorer" },
