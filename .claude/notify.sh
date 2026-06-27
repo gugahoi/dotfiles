@@ -25,9 +25,15 @@ case "$front" in
 esac
 
 dir=$(basename "$PWD")
+# Append the git branch so concurrent worktrees are distinguishable.
+branch=$(git -C "$PWD" rev-parse --abbrev-ref HEAD 2>/dev/null)
+[ -n "$branch" ] && [ "$branch" != "HEAD" ] && dir="$dir · $branch"
 
+# Permission/input prompts pierce Do Not Disturb; routine "done" pings respect it.
+dnd=""
 if [ "$event" = "notification" ]; then
   msg=$(printf '%s' "$input" | jq -r '.message // "Waiting for your input"')
+  dnd="-ignoreDnD"
 else
   # 2. Last assistant text block from the transcript tail.
   transcript=$(printf '%s' "$input" | jq -r '.transcript_path // empty')
@@ -48,4 +54,4 @@ else
 fi
 
 terminal-notifier -title 'Claude Code' -subtitle "$dir" -message "$msg" \
-  -group claude-code -sound Glass -execute "$execute"
+  -group claude-code -sound Glass -execute "$execute" $dnd
