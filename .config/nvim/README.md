@@ -52,6 +52,7 @@ git clone <repository-url> ~/.config/nvim
 
 ### Productivity
 - **amp.nvim** - Sourcegraph Amp integration
+- **sidekick.nvim** - AI CLI manager (claude, opencode, pi, …)
 - **blink.cmp** - Fast completion engine
 - **conform.nvim** - Code formatting
 - **snacks.nvim** - Utilities and UI enhancements
@@ -85,6 +86,19 @@ Plugins are managed through `nvim-pack-lock.json`. To update:
 ### Key Bindings
 
 Leader key is configured as `<Space>`. View keymaps in `lua/config/keymaps.lua`.
+
+#### AI (`<leader>a`) — configured in `lua/plugins/ai.lua`
+
+| Keymap | Mode | Description |
+|--------|------|-------------|
+| `<C-.>` | n/i/t/x | Toggle focus of the active AI terminal |
+| `<leader>aa` | n | Select / start an AI CLI session |
+| `<leader>ad` | n | Detach the current AI CLI session |
+| `<leader>af` | n | Send current file to AI |
+| `<leader>at` | n/x | Send current context (treesitter node) to AI |
+| `<leader>av` | x | Send visual selection to AI |
+| `<leader>ap` | n/x | Pick a saved prompt and send it |
+| `<leader>ag` | n | Generate a commit message for staged changes — inserts into `gitcommit`/`NeogitCommitMessage` buffers via `claude --model haiku`; sends to the active Sidekick CLI otherwise |
 
 ### LSP Configuration
 
