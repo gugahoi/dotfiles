@@ -29,3 +29,11 @@ vim.keymap.set( { "n", "v" }, "gY", '"+Y', { desc = "Yank line to system clipboa
 vim.keymap.set( "n", "gp", '"+p', { desc = "Paste from system clipboard after cursor" })
 vim.keymap.set( "n", "gP", '"+P', { desc = "Paste from system clipboard before cursor" })
 -- stylua: ignore end
+
+vim.keymap.set("n", "<leader>cl", function()
+    local file = vim.fn.expand("%")
+    local line = vim.fn.line(".")
+    local result = file .. ":" .. line
+    vim.fn.setreg("+", result)
+    vim.notify("Copied: " .. result) -- Optional notification
+end, { desc = "Copy filename and line number" })
