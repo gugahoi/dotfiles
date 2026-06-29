@@ -3,7 +3,7 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "includeCoAuthoredBy": false,
-  "model": "sonnet",
+  "model": "opus[1m]",
   "hooks": {
     "Notification": [
       {
@@ -73,7 +73,8 @@
     "pr-review-toolkit@claude-code-plugins": true,
     "figma@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "ponytail@ponytail": true
+    "ponytail@ponytail": true,
+    "lua-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "ponytail": {
