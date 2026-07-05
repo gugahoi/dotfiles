@@ -9,7 +9,7 @@
 	name = Gustavo Hoirisch
 	email = 355877+gugahoi@users.noreply.github.com
 [core]
-	pager = delta
+	pager = hunk pager
 [interactive]
 	difffilter = delta
 [rerere]
