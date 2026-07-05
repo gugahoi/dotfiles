@@ -15,12 +15,16 @@ vim.pack.add({
         src = "https://github.com/nvim-mini/mini.surround",
         version = vim.version.range("*"),
     },
+    {
+        src = "https://github.com/nvim-mini/mini.ai",
+        version = vim.version.range("*"),
+    },
 })
 require("todo-comments").setup()
 
 require("blink.pairs").download():pwait(60000)
 require("blink.pairs").setup({})
-
+require("mini.ai").setup()
 require("mini.surround").setup({
     mappings = {
         add = "gsa", -- Add surrounding in Normal and Visual modes
