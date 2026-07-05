@@ -174,7 +174,7 @@ vim.lsp.config("ts_ls", {
     init_options = {
         preferences = {
             quotePreference = "single",
-            importModuleSpecifierPreference = "relative",
+            importModuleSpecifierPreference = "shortest",
         },
     },
 })
