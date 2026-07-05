@@ -24,11 +24,23 @@ map("n", "<Esc>", ":nohlsearch<cr>", { silent = true })
 map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- stylua: ignore start
+vim.keymap.set("x", "p", [["_dP]], { desc = "Paste over selection without losing yanked text" })
 vim.keymap.set({ "n", "v" }, "gy", '"+y', { desc = "Yank to system clipboard" })
 vim.keymap.set( { "n", "v" }, "gY", '"+Y', { desc = "Yank line to system clipboard" })
 vim.keymap.set( "n", "gp", '"+p', { desc = "Paste from system clipboard after cursor" })
 vim.keymap.set( "n", "gP", '"+P', { desc = "Paste from system clipboard before cursor" })
+
+vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Page down and center cursor" })
+vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Page up and center cursor" })
+
+vim.keymap.set("n", "n", "nzzzv", { desc = "Next search and center cursor" })
+vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous search and center cursor" })
 -- stylua: ignore end
+
+vim.keymap.set("n", "<leader>u", function()
+    vim.cmd.packadd("nvim.undotree")
+    require("undotree").open()
+end, { desc = "Toggle Undotree" })
 
 vim.keymap.set("n", "<leader>cl", function()
     local file = vim.fn.expand("%")
