@@ -26,6 +26,16 @@ check_and_source "${HOME}/.exports"
 check_and_source "${HOME}/.cargo/env"
 check_and_source "${HOME}/.deno/env"
 
+# Use the Bitwarden desktop app as the SSH agent so SSH keys stored in the
+# vault are offered automatically. Falls back to keys on disk in ~/.ssh via
+# the IdentityFile directives in ~/.ssh/config. Two socket paths are tried:
+# the Mac App Store build (sandboxed container) and the direct .dmg build.
+if [[ -S "$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock" ]]; then
+  export SSH_AUTH_SOCK="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
+elif [[ -S "$HOME/.bitwarden-ssh-agent.sock" ]]; then
+  export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+fi
+
 # enable vi mode
 bindkey -v
 # bindkey -e
