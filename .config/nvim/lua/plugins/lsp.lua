@@ -206,8 +206,20 @@ vim.lsp.config("lua_ls", {
     },
 })
 
+vim.lsp.config("biome", {
+    on_attach = on_attach,
+    capabilities = capabilities,
+    root_dir = function(bufnr, on_dir)
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+        local root =
+            vim.fs.root(fname, { "biome.json", "biome.jsonc", "package.json" })
+        on_dir(root)
+    end,
+})
+
 vim.lsp.enable({
     "bashls",
+    "biome",
     "cssls",
     "cssmodules_ls",
     "gopls",
