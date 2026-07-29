@@ -40,6 +40,10 @@ require("mini.surround").setup({
     },
 })
 
+vim.api.nvim_create_user_command("PackUpdate", function()
+    vim.pack.update()
+end, {})
+
 require("plugins.ai")
 require("plugins.format")
 require("plugins.git")
