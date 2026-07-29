@@ -22,6 +22,7 @@ require("mason-lspconfig").setup({
         "lua_ls",
         "cssmodules_ls",
         "ts_ls",
+        "tsgo",
     },
     automatic_enable = false,
 })
@@ -179,6 +180,17 @@ vim.lsp.config("ts_ls", {
     },
 })
 
+vim.lsp.config("tsgo", {
+    on_attach = on_attach,
+    capabilities = capabilities,
+    init_options = {
+        preferences = {
+            quotePreference = "single",
+            importModuleSpecifierPreference = "shortest",
+        },
+    },
+})
+
 -- Setup Lua LSP (lua_ls) with Neovim builtins
 vim.lsp.config("lua_ls", {
     on_attach = on_attach,
@@ -225,5 +237,6 @@ vim.lsp.enable({
     "gopls",
     "jsonls",
     "lua_ls",
-    "ts_ls",
+    -- "ts_ls", -- Testing tsgo
+    "tsgo",
 })
