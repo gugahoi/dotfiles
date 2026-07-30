@@ -1,0 +1,36 @@
+#!/usr/bin/env zsh
+#
+# toggle-airpods - Switch audio output between AirPods Pro and MacBook Pro Speakers
+#
+# If the AirPods aren't currently connected to the Mac (e.g. they're on the
+# phone), reconnects them over Bluetooth first, then switches audio output.
+# Invoked by the "Toggle Airpods/Speakers" Shortcut.
+
+set -u
+
+AIRPODS_ADDR="e8-85-4b-12-e9-63"
+SPEAKERS="MacBook Pro Speakers"
+SAS=/opt/homebrew/bin/SwitchAudioSource
+BU=/opt/homebrew/bin/blueutil
+
+# The Bluetooth device name ("AirPods Pro") and the CoreAudio device name
+# ("Gustavo's AirPods Pro", with a curly apostrophe) don't match, so detect
+# the audio device name by substring instead of hardcoding it.
+airpods_name() { "$SAS" -a -t output | grep -i airpods | head -1; }
+
+current="$("$SAS" -c)"
+name="$(airpods_name)"
+
+if [ -n "$name" ] && [ "$current" = "$name" ]; then
+	"$SAS" -s "$SPEAKERS"
+else
+	if [ -z "$name" ]; then
+		"$BU" --connect "$AIRPODS_ADDR"
+		for _ in $(seq 1 10); do
+			name="$(airpods_name)"
+			[ -n "$name" ] && break
+			sleep 0.5
+		done
+	fi
+	[ -n "$name" ] && "$SAS" -s "$name"
+fi
