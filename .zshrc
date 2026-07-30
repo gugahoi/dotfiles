@@ -122,26 +122,8 @@ if command -v -- sesh >/dev/null 2>&1; then
         {
             exec </dev/tty
             exec <&1
-            local session
-            session=$(sesh list --hide-attached --hide-duplicates --icons | fzf \
-                    --no-sort --ansi \
-                    --border-label ' sesh ' \
-                    --border \
-                    --prompt '⚡  ' \
-                    --height 70% \
-                    --header '  ^a all  ^t tmux  ^g configs  ^x zoxide  ^d kill  ^f find' \
-                    --bind 'tab:down,btab:up' \
-                    --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons --hide-attached)' \
-                    --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons --hide-attached)' \
-                    --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons --hide-attached)' \
-                    --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons --hide-attached)' \
-                    --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-                    --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons --hide-attached)' \
-                    --preview-window 'right:55%' \
-                --preview 'sesh preview {}')
+            sesh picker --tmux -z -i -d -H -s --preview
             zle reset-prompt > /dev/null 2>&1 || true
-            [[ -z "$session" ]] && return
-            sesh connect $session
         }
     }
 
