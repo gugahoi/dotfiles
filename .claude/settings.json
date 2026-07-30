@@ -90,15 +90,17 @@
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
+  "showClearContextOnPlanAccept": true,
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "voice": {
-    "enabled": true,
+    "enabled": false,
     "mode": "tap"
   },
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
+  "autoCompactEnabled": true,
   "teammateMode": "tmux",
   "agentPushNotifEnabled": true,
   "voiceEnabled": true
