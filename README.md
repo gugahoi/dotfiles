@@ -41,6 +41,15 @@ stow .
 stow --adopt -R .
 ```
 
+> **Note:** Stow's default target is the parent directory of wherever the repo
+> lives. If you clone this repo somewhere other than directly under `$HOME`
+> (e.g. `~/Projects/dotfiles` instead of `~/dotfiles`), you must set the
+> target explicitly or symlinks will land in the wrong place:
+>
+> ```bash
+> stow -t ~ .
+> ```
+
 This will create symlinks from the repository files to their target locations in your home directory (e.g., `.config/nvim`, `.pi/agent/extensions`, `.zshrc`, etc.).
 
 ## Managing Files
