@@ -27,7 +27,19 @@ startup_command = "ssh ikora"
 [[session]]
 name = "flux/master"
 path = "~/Projects/worktrees/flux/master/"
+alias = "fm"
+
+[[session]]
+name = "flux/pull-request"
+path = "~/Projects/worktrees/flux/pr-review/"
+alias = "fpr"
+
+[[session]]
+name = "flux/hotfix"
+path = "~/Projects/worktrees/flux/hotfix/"
+alias = "fhot"
 
 [[session]]
 name = "dotfiles"
 path = "~/Projects/gugahoi/dotfiles/"
+alias = "dot"
