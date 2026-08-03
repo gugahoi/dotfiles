@@ -7,5 +7,15 @@
 cwd="$1"
 top_pane=$(tmux split-window -h -b -p 35 -c "$cwd" -P -F '#{pane_id}')
 bot_pane=$(tmux split-window -v    -p 50 -c "$cwd" -t "$top_pane" -P -F '#{pane_id}')
-tmux send-keys -t "$top_pane" "pnpm run dev:backend" C-m
-tmux send-keys -t "$bot_pane" "pnpm run dev:ui:app" C-m
+# No deps? install once in the top pane; the bottom pane waits on a tmux channel
+# so both dev commands don't race a half-installed node_modules.
+if [ -d "$cwd/node_modules" ]; then
+	pre_top=''
+	pre_bot=''
+else
+	pre_top='pnpm install; tmux wait-for -S flux-deps; '
+	pre_bot='tmux wait-for flux-deps; '
+fi
+
+tmux send-keys -t "$top_pane" "${pre_top}pnpm run dev:backend" C-m
+tmux send-keys -t "$bot_pane" "${pre_bot}pnpm run dev:ui:app" C-m
