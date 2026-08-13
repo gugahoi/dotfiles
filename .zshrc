@@ -49,7 +49,7 @@ bindkey "^N" down-line-or-search
 
 bindkey -M viins "^A" beginning-of-line
 bindkey -M viins "^B" backward-char
-bindkey -M viins "^F" forward-char
+bindkey -M viins "^F" forward-word
 bindkey -M viins "^E" end-of-line
 bindkey -M viins "^K" kill-line
 bindkey -M viins "^U" backward-kill-line
