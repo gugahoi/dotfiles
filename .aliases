@@ -88,3 +88,21 @@ function mic() {
 function localserver() {
 	python3 -m http.server 8000
 }
+
+# ? asks claude a one-off question, e.g. `? tell me about a topic`
+# Falls back to codex, then opencode, if claude isn't installed.
+ask_claude() {
+	if command -v claude >/dev/null 2>&1; then
+		claude -p --model haiku --allowedTools="WebSearch,WebFetch" \
+			--system-prompt="You are a helpful general-purpose assistant. Use WebSearch for current events, recent news, or time-sensitive questions." \
+			"$*"
+	elif command -v codex >/dev/null 2>&1; then
+		codex exec -c 'tools.web_search=true' -m gpt-5.6-luna -c model_reasoning_effort=none "$*"
+	elif command -v opencode >/dev/null 2>&1; then
+		opencode run "$*"
+	else
+		echo "ask_claude: none of claude, codex, or opencode found in PATH" >&2
+		return 1
+	fi
+}
+alias "?"="noglob ask_claude"
