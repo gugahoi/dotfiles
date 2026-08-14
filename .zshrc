@@ -36,6 +36,9 @@ elif [[ -S "$HOME/.bitwarden-ssh-agent.sock" ]]; then
   export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 fi
 
+# allow `# comments` at the interactive prompt
+setopt interactive_comments
+
 # enable vi mode
 bindkey -v
 # bindkey -e
@@ -74,6 +77,8 @@ if type brew &>/dev/null; then
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/path.zsh.inc"
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
     check_and_source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+    # default is fg=black,bold — invisible on this theme's #000000 background
+    ZSH_HIGHLIGHT_STYLES[comment]='fg=245'
     if command -v -- fnm >/dev/null 2>&1; then
         eval "$(fnm env --use-on-cd --shell zsh)"
     fi
