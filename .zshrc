@@ -39,6 +39,11 @@ fi
 # allow `# comments` at the interactive prompt
 setopt interactive_comments
 
+# Reclaim three keys the tty eats before ZLE ever sees them:
+#   -ixon         XON/XOFF flow control, which swallows ^Q (start) and ^S (stop)
+#   discard undef VDISCARD, which swallows ^O
+[[ -t 0 ]] && stty -ixon discard undef
+
 # enable vi mode
 bindkey -v
 # bindkey -e
@@ -58,6 +63,13 @@ bindkey -M viins "^K" kill-line
 bindkey -M viins "^U" backward-kill-line
 bindkey -M viins "^W" backward-kill-word
 bindkey -M viins "^Y" yank
+
+# tmux owns ^H ^J ^K ^L at the root table for pane switching (see .tmux.conf),
+# so those never reach ZLE. ^H/^J cost nothing (Backspace sends ^?, Enter sends
+# ^M), but kill-line and clear-screen need somewhere else to live. ^S and ^O are
+# free once the stty line above stops the tty eating them.
+bindkey -M viins "^S" kill-line
+bindkey -M viins "^O" clear-screen
 
 # Edit the current command line in $EDITOR with Ctrl-X Ctrl-E / Ctrl-X E
 autoload -Uz edit-command-line
