@@ -13,6 +13,8 @@ alias cat=bat
 alias gst="git status"
 alias pn=pnpm
 alias reload="source ~/.zshrc"
+# Re-show today's keybinding card; clears the once-a-day stamp first.
+alias tip="rm -f \${XDG_CACHE_HOME:-\$HOME/.cache}/zsh/keybind-shown && source ~/.keybinds"
 alias v=nvim
 alias vi=nvim
 alias vim=nvim

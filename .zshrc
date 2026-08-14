@@ -170,3 +170,6 @@ if [ -d "/opt/homebrew/opt/ruby/bin" ]; then
 fi
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
+# Keybinding of the day. Last, so the card is the final thing before the prompt.
+check_and_source "${HOME}/.keybinds"

@@ -1,0 +1,101 @@
+#!/usr/bin/env zsh
+
+# One zsh keybinding per day, printed on the first new shell of each day.
+# The card is picked by day-of-year, so the deck cycles about once a month and
+# every binding comes back around instead of relying on random draws.
+#
+# Deck format, pipe-separated:  key|widget|description|something to try
+# Field widths are fixed by the box: key<=6, widget<=36, desc<=44, try<=39.
+#
+# Sourced from .zshrc  -> prints today's card.
+# Run directly (./.keybinds) -> checks the deck instead. Do that after editing.
+
+typeset -ga _keybind_deck=(
+    '^X a|_expand_alias|Expand the alias under the cursor.|type  ll  then ^X a'
+    '^X e|edit-command-line|Edit the current line in $EDITOR.|type any command, then ^X e'
+    '^X c|_correct_word|Spell-correct the word at the cursor.|type  grpe  then ^X c'
+    '^X C|_correct_filename|Spell-correct the filename at cursor.|type  cat /usr/binn  then ^X C'
+    '^X h|_complete_help|Show completion funcs/tags for here.|type  git   then ^X h'
+    '^X d|_list_expansions|List every expansion that applies.|type  echo *.md  then ^X d'
+    '^X m|_most_recent_file|Insert newest file matching a glob.|type  cat *  then ^X m'
+    '^X n|_next_tags|Cycle to the next completion group.|Tab after  cd   then ^X n'
+    '^X t|_complete_tag|Complete using only one tag.|type  git ch  then ^X t'
+    '^X ?|_complete_debug|Trace completion into a temp file.|type  git   then ^X ?'
+    '^X ^R|_read_comp|Reload completions, no restart.|after editing any _foo file'
+    '^G|list-expand|Preview what the word expands to.|type  echo ~/D*  then ^G'
+    '^D|list-choices|List completions, insert nothing.|type  cd /usr/  then ^D'
+    '^Q|vi-quoted-insert|Insert the next key literally.|^Q then Tab, for a real tab'
+    '^U|backward-kill-line|Cut to line START, not the whole line.|mid-line, press ^U'
+    '^Y|yank|Paste back the last ^K/^U/^W cut.|^W a word, then ^Y'
+    '^S|kill-line|Cut from cursor to end of line.|mid-line, press ^S'
+    '^O|clear-screen|Clear screen, keep the typed line.|type something, press ^O'
+    '^T|fzf-file-widget|Fuzzy-pick a file, insert its path.|type  vim   then ^T'
+    'Alt-c|fzf-cd-widget|Fuzzy-pick a dir and cd into it.|press Alt-c on an empty line'
+    'Alt-/|_history-complete-older|Complete the word from older history.|type  git com  then Alt-/'
+    'Alt-,|_history-complete-newer|Same, walking towards newer entries.|after Alt-/, press Alt-,'
+)
+
+_keybind_of_the_day() {
+    zmodload zsh/datetime
+
+    # One card per calendar day, not per shell.
+    local stamp="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/keybind-shown"
+    local today; strftime -s today '%Y%m%d' $EPOCHSECONDS
+    [[ -r $stamp && "$(<$stamp)" == $today ]] && return
+    mkdir -p "${stamp:h}" && print -r -- $today >| $stamp
+
+    local doy; strftime -s doy '%j' $EPOCHSECONDS
+    # 10# forces base 10: %j is zero-padded, and 08/09 are invalid octal.
+    local -a card=( ${(s:|:)_keybind_deck[ 10#$doy % $#_keybind_deck + 1 ]} )
+
+    local dim=240
+    print -P ""
+    print -P "  %F{$dim}┌─ %f%Bkeybind of the day%b %F{$dim}${(l:27::─:)}┐%f"
+    print -P "  %F{$dim}│%f  %B%F{cyan}${(r:6:)card[1]}%f%b  %F{white}${(r:36:)card[2]}%f  %F{$dim}│%f"
+    print -P "  %F{$dim}│%f  ${(r:44:)card[3]}  %F{$dim}│%f"
+    print -P "  %F{$dim}│${(l:48:: :)}│%f"
+    print -P "  %F{$dim}│%f  %F{$dim}try:%f %F{green}${(r:39:)card[4]}%f  %F{$dim}│%f"
+    print -P "  %F{$dim}└${(l:48::─:)}┘%f"
+    print -P ""
+}
+
+# Every card must have 4 fields that fit the box, and every day of the year
+# must land on a real card -- including the zero-padded 008/009 octal trap.
+_keybind_selfcheck() {
+    local -A max=( 1 6 2 36 3 44 4 39 )
+    local -a names=( key widget desc try )
+    local fails=0 entry doy idx i
+
+    (( $#_keybind_deck )) || { print "FAIL: deck is empty"; return 1 }
+
+    for entry in $_keybind_deck; do
+        local -a f=( ${(s:|:)entry} )
+        if (( $#f != 4 )); then
+            print "FAIL: expected 4 fields, got $#f: $entry"; (( fails++ )); continue
+        fi
+        for i in 1 2 3 4; do
+            (( ${#f[i]} > max[$i] )) &&
+                { print "FAIL: ${names[i]} is ${#f[i]} chars, max ${max[$i]}: '${f[i]}'"; (( fails++ )) }
+        done
+    done
+
+    for doy in {001..366}; do
+        idx=$(( 10#$doy % $#_keybind_deck + 1 ))
+        (( idx >= 1 && idx <= $#_keybind_deck )) ||
+            { print "FAIL: day $doy -> index $idx, outside 1..$#_keybind_deck"; (( fails++ )) }
+    done
+
+    (( fails )) && { print "\n$fails failure(s)."; return 1 }
+    print "ok: $#_keybind_deck cards, all fields fit the box, 366/366 days in range."
+}
+
+# zsh_eval_context is bare "toplevel" when executed, and contains "file" when
+# sourced -- so running this file directly checks the deck instead of printing.
+if [[ $zsh_eval_context == toplevel ]]; then
+    _keybind_selfcheck
+    exit $?
+fi
+
+_keybind_of_the_day
+unset _keybind_deck
+unfunction _keybind_of_the_day _keybind_selfcheck
