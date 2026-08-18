@@ -3,8 +3,9 @@
 #   top-left:    pnpm run dev:backend
 #   bottom-left: pnpm run dev:ui:app
 #   right:       idle (for opencode or whatever you spawn)
-# Pass the current pane's path so the layout is cwd-relative.
-cwd="$1"
+# Pass the current pane's path; panes open at the repo root so this works from
+# any subfolder (falls back to the given path when not in a git repo).
+cwd=$(git -C "$1" rev-parse --show-toplevel 2>/dev/null || echo "$1")
 top_pane=$(tmux split-window -h -b -p 35 -c "$cwd" -P -F '#{pane_id}')
 bot_pane=$(tmux split-window -v    -p 50 -c "$cwd" -t "$top_pane" -P -F '#{pane_id}')
 # No deps? install once in the top pane; the bottom pane waits on a tmux channel
