@@ -5,6 +5,7 @@ blacklist = [
   "^aider( |$)",
   "^amazon_q( |$)",
   "^claude( |$)",
+  "^cliamp( |$)",
   "^codex( |$)",
   "^copilot( |$)",
   "^crush( |$)",
