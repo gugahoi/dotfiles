@@ -8,7 +8,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - **tmux** - Tmux configuration
 - **zsh** - Zsh configuration
 - **gh** - GitHub CLI configuration
-- **.pi** - Pi coding agent extensions and config
+- **pi** - Pi coding agent extensions and config (`.config/pi/`)
 - **.claude** - Claude Code hooks and scripts
 - **Brewfile** - Homebrew package list
 
@@ -50,7 +50,7 @@ stow --adopt -R .
 > stow -t ~ .
 > ```
 
-This will create symlinks from the repository files to their target locations in your home directory (e.g., `.config/nvim`, `.pi/agent/extensions`, `.zshrc`, etc.).
+This will create symlinks from the repository files to their target locations in your home directory (e.g., `.config/nvim`, `.config/pi/extensions`, `.zshrc`, etc.).
 
 ## Managing Files
 
@@ -99,15 +99,16 @@ Stow uses a simple structure:
 dotfiles/
 ├── .config/
 │   ├── nvim/          # Neovim config
-│   └── gh/            # GitHub CLI config
-├── .pi/
-│   └── agent/
-│       └── extensions/ # Pi coding agent extensions
+│   ├── gh/            # GitHub CLI config
+│   └── pi/            # Pi coding agent config
+│       └── extensions/ # Pi extensions (plan-mode, subagent, etc.)
 ├── .tmux.conf         # Tmux configuration
 ├── .zshrc             # Zsh configuration
+├── .exports           # Env vars (incl. PI_CODING_AGENT_DIR)
 ├── .gitconfig         # Git configuration
 ├── Brewfile           # Homebrew packages
 └── README.md
+```
 
 ## Useful Stow Commands
 
@@ -142,6 +143,36 @@ If Stow reports conflicts, it means files already exist in your home directory t
 ls -la ~/.config/nvim
 ls -la ~/.zshrc
 ```
+
+## Pi Coding Agent Layout
+
+Pi's config lives under `.config/pi/` and is pointed at by `PI_CODING_AGENT_DIR`
+(set in `.exports`):
+
+```sh
+export PI_CODING_AGENT_DIR="$HOME/.config/pi"
+```
+
+Pi treats that directory as its **agent dir** and discovers resources at fixed
+sub-paths directly beneath it:
+
+| Resource   | Path pi reads                    |
+|------------|----------------------------------|
+| Extensions | `~/.config/pi/extensions/`       |
+| Settings   | `~/.config/pi/settings.json`     |
+| Sessions   | `~/.config/pi/sessions/`         |
+| Auth       | `~/.config/pi/auth.json` (local, gitignored) |
+
+> **Gotcha:** extensions must sit at `.config/pi/extensions/`, **not**
+> `.config/pi/agent/extensions/`. The extra `agent/` layer only applies to pi's
+> *default* dir (`~/.pi/agent`); since `PI_CODING_AGENT_DIR` already points at
+> `.config/pi`, nesting them under `agent/` makes pi silently find zero
+> extensions (no `/plan`, etc.). After adding or moving extensions, run
+> `/reload` in pi or restart it.
+
+Each extension is either a single `*.ts` file or a directory with an
+`index.ts`. Current extensions: `plan-mode`, `subagent`,
+`github-issue-autocomplete`, `questionnaire`.
 
 ## Notes
 

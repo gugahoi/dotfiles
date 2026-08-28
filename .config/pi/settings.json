@@ -1,28 +1,31 @@
 {
-    "lastChangelogVersion": "0.84.3",
-    "theme": "dark",
-    "defaultProvider": "github-copilot",
-    "defaultModel": "claude-opus-4.8",
-    "hideThinkingBlock": false,
-    "enabledModels": [
-        "github-copilot/claude-opus-4.8",
-        "github-copilot/gemini-3.7-flash",
-        "github-copilot/gpt-5.6-sol"
-    ],
-    "steeringMode": "all",
-    "markdown": {
-        "mermaid": "streaming"
-    },
-    "quietStartup": true,
-    "enableInstallTelemetry": false,
-    "defaultProjectTrust": "ask",
-    "doubleEscapeAction": "tree",
-    "modelThinkingLevels": {
-        "github-copilot/gpt-5.6-sol": "max",
-        "github-copilot/claude-opus-4.8": "max",
-        "github-copilot/gemini-3.7-flash": "medium"
-    },
-    "tuiMode": "fullscreen",
-    "fullscreenExitOutput": "transcript",
-    "fullscreenScrollbar": "auto"
+  "lastChangelogVersion": "0.84.3",
+  "theme": "dark",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-5.6-terra",
+  "hideThinkingBlock": true,
+  "enabledModels": [
+    "github-copilot/claude-opus-4.8",
+    "github-copilot/gemini-3.7-flash",
+    "github-copilot/gpt-5.6-sol"
+  ],
+  "steeringMode": "all",
+  "markdown": {
+    "mermaid": "streaming"
+  },
+  "quietStartup": true,
+  "enableInstallTelemetry": false,
+  "defaultProjectTrust": "ask",
+  "doubleEscapeAction": "tree",
+  "modelThinkingLevels": {
+    "github-copilot/gpt-5.6-sol": "max",
+    "github-copilot/claude-opus-4.8": "max",
+    "github-copilot/gemini-3.7-flash": "medium"
+  },
+  "tuiMode": "fullscreen",
+  "fullscreenExitOutput": "transcript",
+  "fullscreenScrollbar": "auto",
+  "packages": [
+    "git:github.com/earendil-works/pi-review"
+  ]
 }
