@@ -173,3 +173,6 @@ export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # Keybinding of the day. Last, so the card is the final thing before the prompt.
 check_and_source "${HOME}/.keybinds"
+
+# Pi
+export PATH="/Users/guga/.local/share/fnm/node-versions/v24.18.0/installation/bin:$PATH"
