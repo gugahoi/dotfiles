@@ -40,32 +40,6 @@ alias lc='ls -1'
 alias ll='ls -l'
 alias la='ll -a'
 
-# wtclone clones a repository as a hidden bare repo and creates a worktree for the default branch.
-wtclone() {
-	if [ -z "$1" ]; then
-		echo "Usage: wtclone <repository-url> [directory]"
-		return 1
-	fi
-
-	local repo_url="$1"
-	local dir="${2:-${repo_url##*/}}"
-	dir="${dir%.git}"
-
-	mkdir -p "$dir" || return
-	git clone --bare "$repo_url" "$dir/.bare" || return
-	git -C "$dir/.bare" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
-	git -C "$dir/.bare" fetch origin || return
-	printf 'gitdir: ./.bare\n' >"$dir/.git"
-
-	local default_branch
-	default_branch=$(git -C "$dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
-	default_branch="${default_branch:-main}"
-
-	git -C "$dir" worktree add "$default_branch" "$default_branch"
-}
-
-
-
 # audio allows switching of the audio input and output from the command line
 function audio() {
 	if command -v -- SwitchAudioSource >/dev/null 2>&1; then
