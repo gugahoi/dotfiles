@@ -1,0 +1,27 @@
+# Social Media Blocklist for Focus Modes
+#
+# One domain per line. Blank lines and `#` comments are ignored; trailing
+# comments (e.g. `x.com  # birdsite`) are stripped too. Each domain is mapped
+# to 0.0.0.0 (IPv4) and :: (IPv6) inside /etc/hosts by `focus-blocker enable`.
+#
+# List both the bare domain and the www. (and any other) subdomains you use,
+# since /etc/hosts does not match wildcards.
+
+x.com
+twitter.com
+api.twitter.com
+reddit.com
+www.reddit.com
+old.reddit.com
+instagram.com
+www.instagram.com
+facebook.com
+www.facebook.com
+tiktok.com
+www.tiktok.com
+threads.net
+www.threads.net
+linkedin.com
+www.linkedin.com
+youtube.com
+www.youtube.com

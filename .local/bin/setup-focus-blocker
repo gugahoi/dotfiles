@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# setup-focus-blocker - Wire focus-blocker into sudo + /usr/local/bin
+#
+# Description:
+#   Stow already symlinks the script (~/.local/bin/focus-blocker) and the
+#   blocklist (~/.config/focus-blocker/). This script does only the two things
+#   Stow cannot:
+#     1. Symlink /usr/local/bin/focus-blocker -> the stowed script, so the
+#        binary is reachable via sudo's restricted secure_path (which includes
+#        /usr/local/bin but not ~/.local/bin).
+#     2. Install a sudoers.d rule granting passwordless sudo for that path, so
+#        the Work Focus Shortcuts can run it silently.
+#
+# Run it once, after `stow .`:
+#     .local/bin/setup-focus-blocker
+#
+# SECURITY NOTE:
+#   The NOPASSWD rule targets a symlink chain that ends at a file inside your
+#   (user-writable) dotfiles repo. Anything running as your user can therefore
+#   edit the script and have it run as root without a prompt. That is the price
+#   of silent Shortcuts automation. If you want it airtight instead, replace the
+#   symlink step with a root-owned copy:
+#       sudo install -o root -g wheel -m 0755 \
+#           "$HOME/.local/bin/focus-blocker" /usr/local/bin/focus-blocker
+#   ...and re-run this after every change to the script.
+
+set -euo pipefail
+
+USER_NAME="$(id -un)"
+STOWED_BIN="$HOME/.local/bin/focus-blocker"
+TARGET_BIN="/usr/local/bin/focus-blocker"
+SUDOERS_FILE="/etc/sudoers.d/focus-blocker"
+
+echo "==> Setting up Focus Blocker..."
+
+# 0. Sanity check: stow must have run first.
+if [ ! -e "$STOWED_BIN" ]; then
+	echo "Error: $STOWED_BIN not found. Run 'stow .' (or 'stow -t ~ .') first." >&2
+	exit 1
+fi
+
+# 1. Symlink into /usr/local/bin so sudo's secure_path can find it.
+sudo mkdir -p /usr/local/bin
+sudo ln -sfn "$STOWED_BIN" "$TARGET_BIN"
+echo "Linked $TARGET_BIN -> $STOWED_BIN"
+
+# 2. Install the passwordless-sudo rule, validating before it goes live so a
+#    typo can never lock you out of sudo.
+echo "Configuring passwordless sudo for $TARGET_BIN..."
+tmp_sudoers="$(mktemp)"
+printf '%s ALL=(ALL) NOPASSWD: %s\n' "$USER_NAME" "$TARGET_BIN" > "$tmp_sudoers"
+if sudo visudo -cf "$tmp_sudoers" >/dev/null; then
+	sudo install -o root -g wheel -m 0440 "$tmp_sudoers" "$SUDOERS_FILE"
+	echo "Installed $SUDOERS_FILE"
+else
+	echo "Error: generated sudoers rule failed validation; not installing." >&2
+	rm -f "$tmp_sudoers"
+	exit 1
+fi
+rm -f "$tmp_sudoers"
+
+echo "==> Done! Test it with:"
+echo "    sudo focus-blocker enable"
+echo "    sudo focus-blocker status"
+echo "    sudo focus-blocker disable"

@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+#
+# focus-blocker - Redirect distracting domains to 0.0.0.0 in /etc/hosts
+#
+# Description:
+#   Injects (or removes) a delimited block of hosts entries that sink the
+#   domains listed in blocklist.txt to 0.0.0.0 / ::, then flushes the macOS
+#   DNS cache. The delimited block means existing /etc/hosts entries are never
+#   touched. Invoked by the "Work Focus - Block/Unblock" Shortcuts, which fire
+#   on the Work Focus turning on/off (see README).
+#
+# Usage:
+#   focus-blocker enable|on|start    : Sink blocklisted domains, flush DNS
+#   focus-blocker disable|off|stop   : Remove the block, flush DNS
+#   focus-blocker status             : Report whether the block is active
+#
+# Editing /etc/hosts requires root, so `enable`/`disable` must run under sudo.
+# `install/setup-focus-blocker` configures passwordless sudo for this script so
+# Shortcuts can run it silently.
+
+set -euo pipefail
+
+CONFIG_DIR="${FOCUS_BLOCKER_CONFIG_DIR:-"$HOME/.config/focus-blocker"}"
+BLOCKLIST_FILE="${CONFIG_DIR}/blocklist.txt"
+HOSTS_FILE="${FOCUS_BLOCKER_HOSTS_FILE:-/etc/hosts}"
+
+START_MARKER="# --- BEGIN FOCUS BLOCKER ---"
+END_MARKER="# --- END FOCUS BLOCKER ---"
+
+# require_writable aborts unless the hosts file can be written, since
+# enable/disable modify it. Tests the actual requirement (write access) rather
+# than rootness, so it also works when pointed at a writable file for testing.
+require_writable() {
+	if [ ! -w "$HOSTS_FILE" ]; then
+		echo "Error: '$1' cannot write $HOSTS_FILE (need root)." >&2
+		echo "       Try: sudo $(basename "$0") $1" >&2
+		exit 1
+	fi
+}
+
+flush_dns() {
+	dscacheutil -flushcache 2>/dev/null || true
+	killall -HUP mDNSResponder 2>/dev/null || true
+}
+
+# remove_blocks deletes the delimited block (inclusive) if present. Safe to
+# call when no block exists.
+remove_blocks() {
+	if grep -Fq "$START_MARKER" "$HOSTS_FILE"; then
+		sed -i '' "/$START_MARKER/,/$END_MARKER/d" "$HOSTS_FILE"
+	fi
+}
+
+enable_blocking() {
+	require_writable enable
+	if [ ! -f "$BLOCKLIST_FILE" ]; then
+		echo "Error: Blocklist file not found at $BLOCKLIST_FILE" >&2
+		exit 1
+	fi
+
+	# Ensure a clean slate so re-running enable never duplicates the block.
+	remove_blocks
+
+	local temp_file
+	temp_file="$(mktemp)"
+
+	echo "$START_MARKER" >> "$temp_file"
+	while IFS= read -r domain || [ -n "$domain" ]; do
+		# Strip trailing comments and surrounding whitespace.
+		domain="$(echo "$domain" | sed -e 's/#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+		if [ -n "$domain" ]; then
+			echo "0.0.0.0 $domain" >> "$temp_file"
+			echo ":: $domain" >> "$temp_file"
+		fi
+	done < "$BLOCKLIST_FILE"
+	echo "$END_MARKER" >> "$temp_file"
+
+	cat "$temp_file" >> "$HOSTS_FILE"
+	rm -f "$temp_file"
+
+	flush_dns
+	echo "Focus blocker: ENABLED"
+}
+
+disable_blocking() {
+	require_writable disable
+	remove_blocks
+	flush_dns
+	echo "Focus blocker: DISABLED"
+}
+
+status_blocking() {
+	if grep -Fq "$START_MARKER" "$HOSTS_FILE"; then
+		echo "Focus blocker is currently ACTIVE"
+	else
+		echo "Focus blocker is currently INACTIVE"
+	fi
+}
+
+case "${1:-}" in
+	enable|on|start)
+		enable_blocking
+		;;
+	disable|off|stop)
+		disable_blocking
+		;;
+	status)
+		status_blocking
+		;;
+	*)
+		echo "Usage: $(basename "$0") {enable|disable|status}" >&2
+		exit 1
+		;;
+esac

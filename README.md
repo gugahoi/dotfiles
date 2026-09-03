@@ -10,6 +10,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - **gh** - GitHub CLI configuration
 - **pi** - Pi coding agent extensions and config (`.config/pi/`)
 - **.claude** - Claude Code hooks and scripts
+- **focus-blocker** - Sink social-media domains in `/etc/hosts` on the Work Focus
 - **Brewfile** - Homebrew package list
 
 ## Installation
@@ -100,8 +101,10 @@ dotfiles/
 ├── .config/
 │   ├── nvim/          # Neovim config
 │   ├── gh/            # GitHub CLI config
+│   ├── focus-blocker/ # Social-media blocklist for Focus modes
 │   └── pi/            # Pi coding agent config
 │       └── extensions/ # Pi extensions (plan-mode, subagent, etc.)
+├── .local/bin/        # Personal scripts on PATH (focus-blocker, wt, ...)
 ├── .tmux.conf         # Tmux configuration
 ├── .zshrc             # Zsh configuration
 ├── .exports           # Env vars (incl. PI_CODING_AGENT_DIR)
@@ -173,6 +176,59 @@ sub-paths directly beneath it:
 Each extension is either a single `*.ts` file or a directory with an
 `index.ts`. Current extensions: `plan-mode`, `subagent`,
 `github-issue-autocomplete`, `questionnaire`.
+
+## Focus Blocker
+
+Redirects distracting domains to `0.0.0.0` in `/etc/hosts` (and flushes the DNS
+cache) while the macOS **Work** Focus is on, and restores them when it turns
+off.
+
+**Files**
+
+| File | Stows to | Purpose |
+|------|----------|---------|
+| `.local/bin/focus-blocker` | `~/.local/bin/focus-blocker` | `enable`/`disable`/`status` |
+| `.local/bin/setup-focus-blocker` | `~/.local/bin/setup-focus-blocker` | one-time sudo + `/usr/local/bin` wiring |
+| `.config/focus-blocker/blocklist.txt` | `~/.config/focus-blocker/blocklist.txt` | domains to block (one per line, `#` comments) |
+
+### Install
+
+```bash
+stow -t ~ .            # symlinks the script, setup script, and blocklist
+setup-focus-blocker    # symlinks /usr/local/bin + adds passwordless sudo rule
+```
+
+`setup-focus-blocker` does only what Stow can't: it symlinks
+`/usr/local/bin/focus-blocker` (so the binary sits on sudo's `secure_path`) and
+installs `/etc/sudoers.d/focus-blocker` granting passwordless sudo, so Shortcuts
+can run it silently. Test it:
+
+```bash
+sudo focus-blocker enable
+sudo focus-blocker status
+sudo focus-blocker disable
+```
+
+> **Security tradeoff:** the passwordless-sudo rule points at a script inside
+> this (user-writable) repo, so anything running as you can edit it and get
+> root without a prompt. That's the cost of silent automation. To harden,
+> replace the symlink with a root-owned copy (see the note in
+> `setup-focus-blocker`) and re-run it after each change to the script.
+
+### Wire it to the Work Focus (Shortcuts)
+
+1. **Shortcuts app → two shortcuts**, each a single **Run Shell Script** action:
+   - *Work Focus - Block*: `sudo /usr/local/bin/focus-blocker enable`
+   - *Work Focus - Unblock*: `sudo /usr/local/bin/focus-blocker disable`
+2. **Automations tab → +**:
+   - *When Work turns On* → Run *Work Focus - Block* (Run Immediately, notify off)
+   - *When Work turns Off* → Run *Work Focus - Unblock* (Run Immediately, notify off)
+
+### Browser DoH caveat
+
+Firefox / Zen can use **DNS over HTTPS**, which bypasses `/etc/hosts`. Under
+*Settings → Privacy & Security → DNS over HTTPS*, set it to **Default** or
+**Off** so lookups go through the system resolver and the block takes effect.
 
 ## Notes
 
