@@ -181,39 +181,51 @@ Each extension is either a single `*.ts` file or a directory with an
 
 Redirects distracting domains to `0.0.0.0` in `/etc/hosts` (and flushes the DNS
 cache) while the macOS **Work** Focus is on, and restores them when it turns
-off.
+off. Hardened: the passwordless-sudo rule points at **root-owned copies**, not
+at scripts inside this (user-writable) repo.
 
 **Files**
 
-| File | Stows to | Purpose |
-|------|----------|---------|
-| `.local/bin/focus-blocker` | `~/.local/bin/focus-blocker` | `enable`/`disable`/`status` |
-| `.local/bin/setup-focus-blocker` | `~/.local/bin/setup-focus-blocker` | one-time sudo + `/usr/local/bin` wiring |
-| `.config/focus-blocker/blocklist.txt` | `~/.config/focus-blocker/blocklist.txt` | domains to block (one per line, `#` comments) |
+| Repo file (Stow source) | Installed to (root-owned) | Purpose |
+|-------------------------|---------------------------|---------|
+| `.local/bin/focus-blocker` | `/usr/local/bin/focus-blocker` (`root:wheel 0755`) | `enable`/`disable`/`status` |
+| `.config/focus-blocker/blocklist.txt` | `/usr/local/etc/focus-blocker/blocklist.txt` (`root:wheel 0644`) | domains to block (one per line, `#` comments) |
+| `.local/bin/setup-focus-blocker` | *(run in place)* | installs the two copies + sudo rule |
+
+Stow first symlinks the sources into `~/.local/bin` and `~/.config`;
+`setup-focus-blocker` then copies them into the root-owned locations above.
 
 ### Install
 
 ```bash
-stow -t ~ .            # symlinks the script, setup script, and blocklist
-setup-focus-blocker    # symlinks /usr/local/bin + adds passwordless sudo rule
+stow -t ~ .            # symlink the script, setup script, and blocklist
+setup-focus-blocker    # copy root-owned binary + blocklist, add sudo rule
 ```
 
-`setup-focus-blocker` does only what Stow can't: it symlinks
-`/usr/local/bin/focus-blocker` (so the binary sits on sudo's `secure_path`) and
-installs `/etc/sudoers.d/focus-blocker` granting passwordless sudo, so Shortcuts
-can run it silently. Test it:
+`setup-focus-blocker` copies the script to `/usr/local/bin/focus-blocker` and
+the blocklist to `/usr/local/etc/focus-blocker/`, both `root:wheel`, then
+installs `/etc/sudoers.d/focus-blocker` granting passwordless sudo for the exact
+`enable` and `disable` invocations only (validated with `visudo` first). It
+refuses to run if `/usr/local/bin` is user-writable. Test it:
 
 ```bash
 sudo focus-blocker enable
-sudo focus-blocker status
+focus-blocker status     # no sudo needed (reads world-readable /etc/hosts)
 sudo focus-blocker disable
 ```
 
-> **Security tradeoff:** the passwordless-sudo rule points at a script inside
-> this (user-writable) repo, so anything running as you can edit it and get
-> root without a prompt. That's the cost of silent automation. To harden,
-> replace the symlink with a root-owned copy (see the note in
-> `setup-focus-blocker`) and re-run it after each change to the script.
+> **Why copies, not symlinks:** a passwordless-sudo rule pointing at a symlink
+> into this (user-writable) repo would let anything running as you rewrite the
+> script and gain root without a prompt. Copying into a root-owned dir means the
+> executed code can't be altered by a user-level process.
+>
+> **Re-sync after edits:** the root-owned copies are what actually run, so after
+> editing the script or `blocklist.txt` in this repo, re-run
+> `setup-focus-blocker` (one password prompt) to push the changes live.
+>
+> **Maximum hardening (optional):** to drop the passwordless-sudo rule entirely,
+> use a root `launchd` daemon that watches a user-writable trigger file the
+> Shortcut writes with no sudo. Stronger, but more moving parts.
 
 ### Wire it to the Work Focus (Shortcuts)
 

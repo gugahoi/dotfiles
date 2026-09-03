@@ -15,12 +15,18 @@
 #   focus-blocker status             : Report whether the block is active
 #
 # Editing /etc/hosts requires root, so `enable`/`disable` must run under sudo.
-# `install/setup-focus-blocker` configures passwordless sudo for this script so
-# Shortcuts can run it silently.
+# `setup-focus-blocker` installs a root-owned copy of this script at
+# /usr/local/bin/focus-blocker plus a narrow passwordless-sudo rule (enable and
+# disable only) so the Shortcuts can run it silently. Because the executed copy
+# is root-owned, edit the source in your repo and re-run setup-focus-blocker to
+# resync. `status` reads world-readable /etc/hosts and needs no sudo.
 
 set -euo pipefail
 
-CONFIG_DIR="${FOCUS_BLOCKER_CONFIG_DIR:-"$HOME/.config/focus-blocker"}"
+# Default to a fixed, root-owned config dir rather than $HOME/.config: under
+# sudo, $HOME is often reset (e.g. to /var/root), so a home-relative path would
+# break `enable`. FOCUS_BLOCKER_CONFIG_DIR overrides it for local testing.
+CONFIG_DIR="${FOCUS_BLOCKER_CONFIG_DIR:-/usr/local/etc/focus-blocker}"
 BLOCKLIST_FILE="${CONFIG_DIR}/blocklist.txt"
 HOSTS_FILE="${FOCUS_BLOCKER_HOSTS_FILE:-/etc/hosts}"
 
