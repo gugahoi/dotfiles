@@ -1,0 +1,32 @@
+# Stow local ignore list.
+#
+# WARNING: defining this file *replaces* stow's built-in default ignore list
+# (it does not extend it). The defaults are therefore reproduced verbatim
+# below, with a *.bak rule added at the end. If you remove the defaults,
+# stow will start trying to symlink .git, README.md, etc. into the target.
+
+# --- stow built-in defaults ---
+RCS
+.+,v
+
+CVS
+\.\#.+
+\.cvsignore
+
+\.svn
+_darcs
+\.hg
+
+\.git
+\.gitignore
+
+.+~
+\#.*\#
+
+^/README.*
+^/LICENSE.*
+^/COPYING
+
+# --- custom additions ---
+# Editor/tool backup files (e.g. Claude Code's settings.json.bak)
+.*\.bak
