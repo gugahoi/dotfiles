@@ -33,7 +33,7 @@ alias ports='lsof -i -P -n | grep LISTEN'
 
 # LS Aliases
 alias ls=eza
-alias ls="eza -F -gh --group-directories-first --git --icons --color-scale all --hyperlink"
+alias ls="eza -F -gh --group-directories-first --git --icons --color-scale all --hyperlink always"
 alias lh='ls -d .*'
 alias lD='ls -D'
 alias lc='ls -1'
