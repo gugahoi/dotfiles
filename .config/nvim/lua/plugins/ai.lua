@@ -9,6 +9,7 @@ require("sidekick").setup({
         mux = {
             backend = "tmux",
             enabled = true,
+            create = "split",
         },
     },
 })
