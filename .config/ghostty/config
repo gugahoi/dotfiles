@@ -5,7 +5,11 @@ macos-option-as-alt = right
 window-padding-color = extend-always
 window-padding-balance = true
 shell-integration-features = true
-keybind = shift+enter=text:\x1b\r
+# NOTE: Do not remap shift+enter here. Ghostty natively emits the Kitty
+# keyboard-protocol sequence for shift+enter (\x1b[13;2u), which tmux forwards
+# (extended-keys on + xterm-ghostty:extkeys) and Pi/other AI CLIs read as a real
+# newline. A manual `text:` mapping overrides that native encoding and makes
+# shift+enter submit instead of inserting a newline.
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
 # shell-integration-features=ssh-terminfo,ssh-env
 
