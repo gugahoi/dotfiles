@@ -188,25 +188,25 @@ at scripts inside this (user-writable) repo.
 
 | Repo file (Stow source) | Installed to (root-owned) | Purpose |
 |-------------------------|---------------------------|---------|
-| `.local/bin/focus-blocker` | `/usr/local/bin/focus-blocker` (`root:wheel 0755`) | `enable`/`disable`/`status` |
+| `.local/bin/focus-blocker` | `/usr/local/bin/focus-blocker` (`root:wheel 0755`) | `enable`/`disable`/`status`/`setup` |
 | `.config/focus-blocker/blocklist.txt` | `/usr/local/etc/focus-blocker/blocklist.txt` (`root:wheel 0644`) | domains to block (one per line, `#` comments) |
-| `.local/bin/setup-focus-blocker` | *(run in place)* | installs the two copies + sudo rule |
 
 Stow first symlinks the sources into `~/.local/bin` and `~/.config`;
-`setup-focus-blocker` then copies them into the root-owned locations above.
+`focus-blocker setup` then copies them into the root-owned locations above.
 
 ### Install
 
 ```bash
-stow -t ~ .            # symlink the script, setup script, and blocklist
-setup-focus-blocker    # copy root-owned binary + blocklist, add sudo rule
+stow -t ~ .            # symlink the script and blocklist
+focus-blocker setup    # copy root-owned binary + blocklist, add sudo rule
 ```
 
-`setup-focus-blocker` copies the script to `/usr/local/bin/focus-blocker` and
+`focus-blocker setup` copies the script to `/usr/local/bin/focus-blocker` and
 the blocklist to `/usr/local/etc/focus-blocker/`, both `root:wheel`, then
 installs `/etc/sudoers.d/focus-blocker` granting passwordless sudo for the exact
 `enable` and `disable` invocations only (validated with `visudo` first). It
-refuses to run if `/usr/local/bin` is user-writable. Test it:
+refuses to run if `/usr/local/bin` is user-writable, and must be run as your
+normal user (it prompts for sudo itself). Test it:
 
 ```bash
 sudo focus-blocker enable
@@ -221,7 +221,7 @@ sudo focus-blocker disable
 >
 > **Re-sync after edits:** the root-owned copies are what actually run, so after
 > editing the script or `blocklist.txt` in this repo, re-run
-> `setup-focus-blocker` (one password prompt) to push the changes live.
+> `focus-blocker setup` (one password prompt) to push the changes live.
 >
 > **Maximum hardening (optional):** to drop the passwordless-sudo rule entirely,
 > use a root `launchd` daemon that watches a user-writable trigger file the

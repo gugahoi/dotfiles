@@ -13,13 +13,14 @@
 #   focus-blocker enable|on|start    : Sink blocklisted domains, flush DNS
 #   focus-blocker disable|off|stop   : Remove the block, flush DNS
 #   focus-blocker status             : Report whether the block is active
+#   focus-blocker setup              : Install root-owned copies + sudo rule
 #
 # Editing /etc/hosts requires root, so `enable`/`disable` must run under sudo.
-# `setup-focus-blocker` installs a root-owned copy of this script at
+# `focus-blocker setup` installs a root-owned copy of this script at
 # /usr/local/bin/focus-blocker plus a narrow passwordless-sudo rule (enable and
 # disable only) so the Shortcuts can run it silently. Because the executed copy
-# is root-owned, edit the source in your repo and re-run setup-focus-blocker to
-# resync. `status` reads world-readable /etc/hosts and needs no sudo.
+# is root-owned, edit the source in your repo and re-run `focus-blocker setup`
+# to resync. `status` reads world-readable /etc/hosts and needs no sudo.
 
 set -euo pipefail
 
@@ -103,6 +104,104 @@ status_blocking() {
 	fi
 }
 
+# setup_blocking installs root-owned copies of this script and the blocklist,
+# plus a narrow passwordless-sudo rule, so the Shortcuts can run enable/disable
+# silently without the executed code living in the user-writable repo. It reads
+# the stowed sources from $HOME and escalates via sudo only for the privileged
+# copy steps, so it must run as the normal user (not under sudo).
+setup_blocking() {
+	if [ "$(id -u)" -eq 0 ]; then
+		echo "Error: run 'setup' as your normal user, not under sudo." >&2
+		echo "       It reads sources from your home dir and prompts for sudo itself." >&2
+		exit 1
+	fi
+
+	local user_name stowed_bin stowed_blocklist
+	user_name="$(id -un)"
+	stowed_bin="$HOME/.local/bin/focus-blocker"
+	stowed_blocklist="$HOME/.config/focus-blocker/blocklist.txt"
+	local target_bin_dir="/usr/local/bin"
+	local target_bin="$target_bin_dir/focus-blocker"
+	local target_config_dir="/usr/local/etc/focus-blocker"
+	local target_blocklist="$target_config_dir/blocklist.txt"
+	local sudoers_file="/etc/sudoers.d/focus-blocker"
+
+	echo "==> Setting up Focus Blocker (hardened)..."
+
+	# Sources must exist first, i.e. stow must have run.
+	local src
+	for src in "$stowed_bin" "$stowed_blocklist"; do
+		if [ ! -e "$src" ]; then
+			echo "Error: $src not found. Run 'stow .' (or 'stow -t ~ .') first." >&2
+			exit 1
+		fi
+	done
+
+	# Refuse a user-writable bin dir: a root-owned copy there would be pointless
+	# if any user process could swap the whole file (catches Homebrew/Intel,
+	# where /usr/local/bin is user-owned).
+	if [ -d "$target_bin_dir" ] && [ -w "$target_bin_dir" ]; then
+		echo "Error: $target_bin_dir is writable by $user_name." >&2
+		echo "       A root-owned copy there would not be tamper-proof, so refusing." >&2
+		echo "       (On Homebrew/Intel this dir is user-owned. Use a root-owned bin" >&2
+		echo "        dir, or switch to the LaunchDaemon approach in the README.)" >&2
+		exit 1
+	fi
+
+	echo "This will prompt for your password (sudo)."
+
+	# Drop any stale symlink so we never execute through a user-writable link.
+	if [ -L "$target_bin" ]; then
+		sudo rm -f "$target_bin"
+	fi
+
+	# Copy the script and blocklist into root-owned locations. `install` follows
+	# the stow symlink to read real content, but writes plain root-owned files.
+	sudo install -d -o root -g wheel -m 0755 "$target_bin_dir"
+	sudo install -o root -g wheel -m 0755 "$stowed_bin" "$target_bin"
+	echo "Installed $target_bin (root:wheel 0755)"
+
+	sudo install -d -o root -g wheel -m 0755 "$target_config_dir"
+	sudo install -o root -g wheel -m 0644 "$stowed_blocklist" "$target_blocklist"
+	echo "Installed $target_blocklist (root:wheel 0644)"
+
+	# Narrow passwordless-sudo rule (enable/disable only), validated before it
+	# goes live so a typo can never lock you out of sudo.
+	echo "Configuring passwordless sudo (enable/disable only) for $target_bin..."
+	local tmp_sudoers
+	tmp_sudoers="$(mktemp)"
+	printf '%s ALL=(ALL) NOPASSWD: %s enable, %s disable\n' \
+		"$user_name" "$target_bin" "$target_bin" > "$tmp_sudoers"
+	if sudo visudo -cf "$tmp_sudoers" >/dev/null; then
+		sudo install -o root -g wheel -m 0440 "$tmp_sudoers" "$sudoers_file"
+		echo "Installed $sudoers_file"
+	else
+		echo "Error: generated sudoers rule failed validation; not installing." >&2
+		rm -f "$tmp_sudoers"
+		exit 1
+	fi
+	rm -f "$tmp_sudoers"
+
+	# Verify the installed copies are actually root-owned.
+	echo "==> Verifying..."
+	local f owner
+	for f in "$target_bin" "$target_blocklist"; do
+		owner="$(stat -f '%Su:%Sg' "$f")"
+		printf '    %s  %s\n' "$owner" "$f"
+		if [ "${owner%%:*}" != "root" ]; then
+			echo "Warning: $f is not root-owned ($owner)." >&2
+		fi
+	done
+
+	echo "==> Done! Test it with:"
+	echo "    sudo focus-blocker enable"
+	echo "    focus-blocker status        # no sudo needed"
+	echo "    sudo focus-blocker disable"
+	echo ""
+	echo "After editing the script or blocklist in your repo, re-run"
+	echo "'focus-blocker setup' to resync the root-owned copies."
+}
+
 case "${1:-}" in
 	enable|on|start)
 		enable_blocking
@@ -113,8 +212,11 @@ case "${1:-}" in
 	status)
 		status_blocking
 		;;
+	setup)
+		setup_blocking
+		;;
 	*)
-		echo "Usage: $(basename "$0") {enable|disable|status}" >&2
+		echo "Usage: $(basename "$0") {enable|disable|status|setup}" >&2
 		exit 1
 		;;
 esac
