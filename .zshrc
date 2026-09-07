@@ -12,7 +12,7 @@ completion(){
         local cache_file="$cache_dir/$1.zsh"
 
         if [[ ! -s "$cache_file" || "$cache_file" -ot "$(command -v "$1")" ]]; then
-            mkdir -p "$cache_dir"
+            command mkdir -p "$cache_dir"
             eval "$2" >| "$cache_file"
         fi
 

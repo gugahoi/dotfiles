@@ -42,7 +42,7 @@ _keybind_of_the_day() {
     local stamp="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/keybind-shown"
     local today; strftime -s today '%Y%m%d' $EPOCHSECONDS
     [[ -r $stamp && "$(<$stamp)" == $today ]] && return
-    mkdir -p "${stamp:h}" && print -r -- $today >| $stamp
+    command mkdir -p "${stamp:h}" && print -r -- $today >| $stamp
 
     local doy; strftime -s doy '%j' $EPOCHSECONDS
     # 10# forces base 10: %j is zero-padded, and 08/09 are invalid octal.
