@@ -90,6 +90,7 @@ if type brew &>/dev/null; then
     check_and_source "$BREW_PREFIX/share/google-cloud-sdk/completion.zsh.inc"
     check_and_source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
     # default is fg=black,bold — invisible on this theme's #000000 background
+    typeset -A ZSH_HIGHLIGHT_STYLES
     ZSH_HIGHLIGHT_STYLES[comment]='fg=245'
     if command -v -- fnm >/dev/null 2>&1; then
         eval "$(fnm env --use-on-cd --shell zsh)"
