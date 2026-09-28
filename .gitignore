@@ -1,5 +1,9 @@
 .config/pi/auth.json
 .config/pi/extensions/
 
+# TPM and its plugins (installed by install.sh). ~/.tmux is a stow symlink to
+# this repo, so they'd otherwise land here as untracked files.
+.tmux/plugins/
+
 # Editor/tool backup files (e.g. Claude Code's settings.json.bak)
 *.bak

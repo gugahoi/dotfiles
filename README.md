@@ -106,6 +106,7 @@ dotfiles/
 │       └── extensions/ # Pi extensions (plan-mode, subagent, etc.)
 ├── .local/bin/        # Personal scripts on PATH (focus-blocker, wt, ...)
 ├── .tmux.conf         # Tmux configuration
+├── .tmux/scripts/     # Tmux helper scripts (plugins/ is TPM-managed, gitignored)
 ├── .zshrc             # Zsh configuration
 ├── .exports           # Env vars (incl. PI_CODING_AGENT_DIR)
 ├── .gitconfig         # Git configuration
@@ -146,6 +147,25 @@ If Stow reports conflicts, it means files already exist in your home directory t
 ls -la ~/.config/nvim
 ls -la ~/.zshrc
 ```
+
+## Tmux Plugins
+
+Tmux plugins are managed by [TPM](https://github.com/tmux-plugins/tpm) and
+declared as `set -g @plugin '...'` lines at the bottom of `.tmux.conf`.
+`install.sh` installs TPM and every declared plugin into `~/.tmux/plugins/`.
+That folder is gitignored because `~/.tmux` is a stow symlink into this repo.
+It's safe to re-run: TPM is only cloned if missing, and plugins that are
+already installed get skipped.
+
+To do it by hand (after `stow`):
+
+```bash
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+~/.tmux/plugins/tpm/bin/install_plugins
+```
+
+Inside tmux: `prefix + I` installs newly added plugins, `prefix + U` updates
+them, and `prefix + alt + u` removes plugins no longer listed in `.tmux.conf`.
 
 ## Pi Coding Agent Layout
 
