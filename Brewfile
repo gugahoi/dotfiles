@@ -45,3 +45,6 @@ cask "handy"
 cask "spotify"
 cask "tuna"
 cask "zen"
+
+cask "gugahoi/tap/touchy"
+cask "gugahoi/tap/firestore"
