@@ -8,3 +8,7 @@
 # Editor/tool backup files (e.g. Claude Code's settings.json.bak)
 *.bak
 .config/pi/models-store.json
+/.config/pi/trust.json
+/.config/pi/install
+/.config/pi/bin
+/.config/pi/git
