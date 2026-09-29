@@ -31,9 +31,9 @@ check_and_source "${HOME}/.deno/env"
 # the IdentityFile directives in ~/.ssh/config. Two socket paths are tried:
 # the Mac App Store build (sandboxed container) and the direct .dmg build.
 if [[ -S "$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock" ]]; then
-  export SSH_AUTH_SOCK="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
+    export SSH_AUTH_SOCK="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
 elif [[ -S "$HOME/.bitwarden-ssh-agent.sock" ]]; then
-  export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+    export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 fi
 
 # allow `# comments` at the interactive prompt
@@ -162,6 +162,10 @@ if command -v -- pnpm >/dev/null 2>&1; then
 fi
 # pnpm end
 
+if command -v -- atuin >/dev/null 2>&1; then
+    eval "$(atuin init zsh --disable-up-arrow)"
+fi
+
 if command -v -- bob >/dev/null 2>&1; then
     export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 fi
@@ -169,7 +173,6 @@ fi
 if [ -d "/opt/homebrew/opt/ruby/bin" ]; then
     export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 fi
-
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # Keybinding of the day. Last, so the card is the final thing before the prompt.
