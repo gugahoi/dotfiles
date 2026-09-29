@@ -12,3 +12,4 @@
 /.config/pi/install
 /.config/pi/bin
 /.config/pi/git
+/.local/
