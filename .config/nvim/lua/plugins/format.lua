@@ -18,7 +18,7 @@ require("conform").setup({
         bash = { "beautysh" },
         zsh = { "beautysh" },
         markdown = { "rumdl" },
-        toml = { "biome" },
+        toml = { "taplo", "biome" },
         go = { "gofmt", "goimports-reviser", "golines" },
     },
     format_on_save = {

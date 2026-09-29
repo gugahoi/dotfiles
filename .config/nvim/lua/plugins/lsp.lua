@@ -17,11 +17,16 @@ require("mason").setup()
 -- Setup Mason LSPConfig
 require("mason-lspconfig").setup({
     ensure_installed = {
-        "gopls",
+        -- LSPs
         "bashls",
-        "lua_ls",
         "cssmodules_ls",
+        "gopls",
+        "lua_ls",
         "ts_ls",
+
+        -- formatters
+        "beautysh",
+        "taplo",
     },
     automatic_enable = false,
 })
