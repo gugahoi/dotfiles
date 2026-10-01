@@ -22,10 +22,10 @@ require("mason-lspconfig").setup({
         "cssmodules_ls",
         "gopls",
         "lua_ls",
-        "ts_ls",
+        "tsc",
 
         -- formatters
-        "beautysh",
+        -- "beautysh",
         "taplo",
     },
     automatic_enable = false,
@@ -172,8 +172,8 @@ vim.lsp.config("jsonls", {
     capabilities = capabilities,
 })
 
--- Setup TypeScript LSP (ts_ls)
-vim.lsp.config("ts_ls", {
+-- Setup TypeScript LSP (tsc)
+vim.lsp.config("tsc", {
     on_attach = on_attach,
     capabilities = capabilities,
     init_options = {
@@ -230,5 +230,5 @@ vim.lsp.enable({
     "gopls",
     "jsonls",
     "lua_ls",
-    "ts_ls",
+    "tsc",
 })
