@@ -16,6 +16,14 @@
             "command": "bash ~/.claude/notify.sh notification"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/tmux-agent-state.sh claude notify"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -30,6 +38,14 @@
             "command": "bash ~/.claude/tmux-window-name.sh sync"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/tmux-agent-state.sh claude stop"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -38,6 +54,14 @@
           {
             "type": "command",
             "command": "terminal-notifier -remove claude-code"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/tmux-agent-state.sh claude prompt"
           }
         ]
       }
@@ -50,6 +74,14 @@
             "command": "bash ~/.claude/tmux-window-name.sh save"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/tmux-agent-state.sh claude start"
+          }
+        ]
       }
     ],
     "SessionEnd": [
@@ -60,8 +92,19 @@
             "command": "bash ~/.claude/tmux-window-name.sh restore"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/tmux-agent-state.sh claude end"
+          }
+        ]
       }
     ]
+  },
+  "worktree": {
+    "baseRef": "fresh"
   },
   "statusLine": {
     "type": "command",
@@ -88,6 +131,7 @@
       }
     }
   },
+  "feedbackDrafts": "notify",
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
   "showClearContextOnPlanAccept": true,
@@ -101,8 +145,17 @@
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
   "editorMode": "vim",
+  "preferredNotifChannel": "auto",
   "autoCompactEnabled": true,
+  "autoScrollEnabled": true,
   "teammateMode": "tmux",
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
+    }
+  }
 }
