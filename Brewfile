@@ -36,7 +36,6 @@ brew "urlview"
 brew "xcodes"
 brew "zoxide"
 
-cask "nikitabobko/tap/aerospace"
 cask "appcleaner"
 cask "bitwarden"
 cask "block-goose"
@@ -51,3 +50,5 @@ cask "zen"
 
 cask "gugahoi/tap/touchy"
 cask "gugahoi/tap/firestore"
+cask "nikitabobko/tap/aerospace"
+brew "bjarneo/cliamp/cliamp"
