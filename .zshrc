@@ -102,7 +102,7 @@ completion "docker" "docker completion zsh"
 completion "pnpm" "pnpm completion zsh"
 completion "basiq" "basiq completion zsh"
 completion "firestore" "firestore completion zsh"
-completion "opencode" "opencode completion zsh"
+completion "opencode" "opencode --completions zsh"
 completion "op" "op completion zsh" # 1Password CLI
 completion "fzf" "fzf --zsh"
 completion "exercisom" "exercisom completion zsh"
