@@ -5,7 +5,7 @@ start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
-accordion-padding = 0
+accordion-padding = 10
 
 # Mouse follows focus when focused monitor changes
 # on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
@@ -82,6 +82,7 @@ l = 'resize width +50'
 shift-l = 'resize width +150'
 enter = 'mode main'
 esc = 'mode main'
+
 
 [workspace-to-monitor-force-assignment]
 1 = ['PHL', 1]
