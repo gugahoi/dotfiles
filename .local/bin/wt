@@ -11,6 +11,7 @@
 # Usage:
 #   wt             : Interactively select a branch to switch to (creating worktree if needed)
 #                    - Press [Ctrl-x] inside the selection menu to delete the worktree and branch
+#                      (runs in the background; several deletions can run at once)
 #   wt rm | delete : Interactively select a worktree to remove (with a confirmation prompt)
 #   wt list        : List all active worktrees
 #
@@ -44,8 +45,104 @@ delete_branch_and_worktree() {
 		git worktree remove "$worktree_path" >/dev/null 2>&1 || git worktree remove --force "$worktree_path" >/dev/null 2>&1 || true
 	fi
 
-	# 3. Delete the local branch
-	git branch -D "$branch" >/dev/null 2>&1 || true
+	# 3. Delete the local branch (allow extra time for packed-refs.lock held by concurrent deletions)
+	git -c core.packedRefsTimeout=5000 branch -D "$branch" >/dev/null 2>&1 || true
+}
+
+# Background deletions keep per-repo state in the git common dir:
+#   pending/<branch>  one marker per in-flight deletion (encoded branch name), containing
+#                     the PID of the process doing the deletion
+#   sessions/<pid>    one file per open `wt` picker, containing its fzf --listen socket path,
+#                     so finished deletions can refresh every open picker
+PENDING_SUFFIX=" [deleting…]"
+
+state_dir() {
+	local common
+	common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 1
+	printf '%s/wt-state/%s' "$common" "$1"
+}
+
+# Branch names may contain '/', so encode them into flat file names
+encode_branch() {
+	local s="${1//\%/%25}"
+	printf '%s' "${s//\//%2F}"
+}
+decode_branch() {
+	local s="${1//\%2F//}"
+	printf '%s' "${s//\%25/%}"
+}
+
+# list_pending prints branches with a deletion in flight, removing stale markers
+# left behind by deletion processes that died.
+list_pending() {
+	local dir f pid
+	dir=$(state_dir pending) || return 0
+	for f in "$dir"/*; do
+		[ -f "$f" ] || continue
+		pid=$(<"$f")
+		if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+			rm -f "$f"
+			continue
+		fi
+		decode_branch "${f##*/}"
+		echo
+	done
+}
+
+# notify_fzf asks every open `wt` picker of this repo to refresh its branch list,
+# dropping registrations whose socket no longer exists.
+notify_fzf() {
+	local dir f sock
+	dir=$(state_dir sessions) || return 0
+	for f in "$dir"/*; do
+		[ -f "$f" ] || continue
+		sock=$(<"$f")
+		if [ ! -S "$sock" ]; then
+			rm -f "$f"
+			continue
+		fi
+		curl -s --max-time 2 --unix-socket "$sock" http \
+			-d "reload-sync(\"$SCRIPT_PATH\" --list-branches)" >/dev/null 2>&1 || true
+	done
+}
+
+# cmd_delete_bg starts deleting a branch and its worktree in a detached background
+# process and returns immediately, so several deletions can run concurrently.
+cmd_delete_bg() {
+	local branch="${1:-}" dir marker pid
+	[ -z "$branch" ] && return 0
+	dir=$(state_dir pending) || return 1
+	mkdir -p "$dir" || return 1
+	marker="$dir/$(encode_branch "$branch")"
+
+	# Ignore if this branch is already being deleted
+	if [ -f "$marker" ]; then
+		pid=$(<"$marker")
+		if [ -z "$pid" ] || kill -0 "$pid" 2>/dev/null; then
+			return 0
+		fi
+	fi
+
+	echo "$$" >"$marker"
+	# Job control puts the job in its own process group so it isn't killed along with
+	# fzf's child processes; it also ignores hangups/interrupts so it always completes.
+	set -m
+	(
+		trap '' HUP INT TERM
+		delete_branch_and_worktree "$branch"
+		rm -f "$marker"
+		notify_fzf
+	) </dev/null >/dev/null 2>&1 &
+	echo "$!" >"$marker"
+}
+
+# cmd_header prints the fzf header, including the number of in-flight deletions
+cmd_header() {
+	local n
+	n=$(list_pending | grep -c .)
+	printf 'Ctrl-X: Delete branch & worktree'
+	[ "$n" -gt 0 ] && printf '   ⏳ Deleting %d branch(es)…' "$n"
+	echo
 }
 
 # Helper to extract repo name from URL
@@ -127,6 +224,7 @@ cmd_delete() {
 
 # cmd_list_branches outputs all branches and appends [wt] if they have an active worktree,
 # filtering out the current branch, and sorting active worktrees at the bottom.
+# Branches with a deletion in flight are listed after the worktrees, tagged as deleting.
 cmd_list_branches() {
 	local wt_branches current_branch
 	wt_branches=$(git worktree list --porcelain 2>/dev/null | awk '$1 == "branch" { sub("^refs/heads/", "", $2); print $2 }' || true)
@@ -134,6 +232,8 @@ cmd_list_branches() {
 
 	export wt_list="$wt_branches"
 	export current_branch="$current_branch"
+	export pending_list="$(list_pending)"
+	export pending_suffix="$PENDING_SUFFIX"
 	git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u | awk '
 		BEGIN {
 			split(ENVIRON["wt_list"], lines, "\n")
@@ -142,15 +242,25 @@ cmd_list_branches() {
 					wt[lines[i]] = 1
 				}
 			}
+			split(ENVIRON["pending_list"], lines, "\n")
+			for (i in lines) {
+				if (lines[i] != "") {
+					pending[lines[i]] = 1
+				}
+			}
 			cur = ENVIRON["current_branch"]
+			suffix = "\033[33m" ENVIRON["pending_suffix"] "\033[0m"
 			wt_count = 0
+			pending_count = 0
 			regular_count = 0
 		}
 		{
 			if ($0 == cur || $0 == "") {
 				next
 			}
-			if ($0 in wt) {
+			if ($0 in pending) {
+				pending_lines[pending_count++] = $0 suffix
+			} else if ($0 in wt) {
 				wt_lines[wt_count++] = $0 " [wt]"
 			} else {
 				regular_lines[regular_count++] = $0
@@ -159,6 +269,9 @@ cmd_list_branches() {
 		END {
 			for (i = 0; i < wt_count; i++) {
 				print wt_lines[i]
+			}
+			for (i = 0; i < pending_count; i++) {
+				print pending_lines[i]
 			}
 			for (i = 0; i < regular_count; i++) {
 				print regular_lines[i]
@@ -169,12 +282,30 @@ cmd_list_branches() {
 
 # cmd_switch lists all branches, allowing switching/creating with Ctrl-X keybinding for deletion
 cmd_switch() {
-	local branch default_branch local_branch target_path
-	branch=$("$SCRIPT_PATH" --list-branches | fzf --print-query --prompt="Branch> " --header="Ctrl-X: Delete branch & worktree" --bind "ctrl-x:execute-silent(\"$SCRIPT_PATH\" --delete-branch {1})+reload(\"$SCRIPT_PATH\" --list-branches)" | awk '
+	local branch default_branch local_branch target_path sock_dir sessions session_file=""
+	# Ctrl-X spawns a background deletion and returns immediately, so several deletions
+	# can run concurrently. This picker registers its fzf --listen socket so finished
+	# deletions can make it reload; the header is refreshed after every (re)load.
+	sock_dir=$(mktemp -d "${TMPDIR:-/tmp}/wt.XXXXXX") || return 1
+	if sessions=$(state_dir sessions) && mkdir -p "$sessions"; then
+		session_file="$sessions/$$"
+		echo "$sock_dir/fzf.sock" >"$session_file"
+	fi
+	branch=$("$SCRIPT_PATH" --list-branches | fzf --ansi --print-query --prompt="Branch> " \
+		--listen="$sock_dir/fzf.sock" \
+		--header="$(cmd_header)" \
+		--bind "ctrl-x:execute-silent(\"$SCRIPT_PATH\" --delete-branch-bg {1})+reload-sync(\"$SCRIPT_PATH\" --list-branches)" \
+		--bind "load:transform-header(\"$SCRIPT_PATH\" --header)" | awk '
 		NR == 1 { query = $0; next }
 		{ selected = $0 }
 		END { print (selected != "" ? selected : query) }
 	')
+	[ -n "$session_file" ] && rm -f "$session_file"
+	rm -rf "$sock_dir"
+	if [[ "$branch" == *"$PENDING_SUFFIX" ]]; then
+		echo "wt: '${branch%"$PENDING_SUFFIX"}' is being deleted" >&2
+		return 1
+	fi
 	branch="${branch% \[wt\]}"
 	[ -z "$branch" ] && return 0
 	git check-ref-format --branch "$branch" >/dev/null 2>&1 || return 1
@@ -239,6 +370,7 @@ show_help() {
 	echo "Usage:"
 	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
 	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
+	echo "                        (runs in the background; several deletions can run at once)"
 	echo "  wt clone <url> [dir] Clone a repository as bare and set up worktrees"
 	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
 	echo "  wt list             List all active worktrees"
@@ -250,8 +382,11 @@ case "${1:-}" in
 --list-branches)
 	cmd_list_branches
 	;;
---delete-branch)
-	delete_branch_and_worktree "$2"
+--delete-branch-bg)
+	cmd_delete_bg "${2:-}"
+	;;
+--header)
+	cmd_header
 	;;
 clone)
 	cmd_clone "${2:-}" "${3:-}"
