@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "1.0.2",
   "theme": "dark",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-6-sol",
@@ -26,5 +26,6 @@
   "packages": [
     "git:github.com/earendil-works/pi-review"
   ],
-  "defaultThinkingLevel": "xhigh"
+  "defaultThinkingLevel": "xhigh",
+  "defaultTools": ["+codemode"]
 }
