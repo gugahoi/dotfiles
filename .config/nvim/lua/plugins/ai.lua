@@ -1,9 +1,7 @@
 vim.pack.add({
-    "https://github.com/sourcegraph/amp.nvim",
     "https://github.com/folke/sidekick.nvim",
 })
 
-require("amp").setup({ auto_start = true })
 require("sidekick").setup({
     cli = {
         mux = {
