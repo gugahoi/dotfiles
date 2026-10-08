@@ -7,6 +7,10 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 
 accordion-padding = 10
 
+after-startup-command = [
+  'exec-and-forget borders active_color=0xffffffff inactive_color=0x00000000 width=8.0',
+]
+
 # Mouse follows focus when focused monitor changes
 # on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
