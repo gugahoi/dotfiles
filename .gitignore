@@ -13,3 +13,24 @@
 /.config/pi/bin
 /.config/pi/git
 /.local/
+
+# Claude Code runtime state (sessions, caches, history, plugins...). Track only
+# the hand-written config and the hook scripts settings.json points to.
+/.claude/*
+!/.claude/settings.json
+!/.claude/notify.sh
+!/.claude/tmux-window-name.sh
+
+# ~/.config app state, caches and credentials (never commit these)
+/.config/1Password/
+/.config/configstore/
+/.config/gcloud/
+/.config/op/
+/.config/mole/
+/.config/pi/sessions/
+/.config/cliamp/*.log
+/.config/karabiner/automatic_backups/
+# opencode: only the hand-edited config (service.json holds a password)
+/.config/opencode/*
+!/.config/opencode/opencode.jsonc
+!/.config/opencode/cli.json
