@@ -12,6 +12,7 @@
 #   wt             : Interactively select a branch to switch to (creating worktree if needed)
 #                    - Press [Ctrl-x] inside the selection menu to delete the worktree and branch
 #                      (runs in the background; several deletions can run at once)
+#   wt issue       : Pick an open GitHub issue and switch to (or create) a <number>-* branch for it
 #   wt rm | delete : Interactively select a worktree to remove (with a confirmation prompt)
 #   wt list        : List all active worktrees
 #
@@ -282,7 +283,7 @@ cmd_list_branches() {
 
 # cmd_switch lists all branches, allowing switching/creating with Ctrl-X keybinding for deletion
 cmd_switch() {
-	local branch default_branch local_branch target_path sock_dir sessions session_file=""
+	local branch sock_dir sessions session_file=""
 	# Ctrl-X spawns a background deletion and returns immediately, so several deletions
 	# can run concurrently. This picker registers its fzf --listen socket so finished
 	# deletions can make it reload; the header is refreshed after every (re)load.
@@ -302,6 +303,14 @@ cmd_switch() {
 	')
 	[ -n "$session_file" ] && rm -f "$session_file"
 	rm -rf "$sock_dir"
+	switch_to_branch "$branch"
+}
+
+# switch_to_branch takes a branch picked in fzf (possibly tagged [wt] or deleting) and switches
+# to its tmux session, creating the worktree - and the branch, off a freshly fetched
+# origin/<default> - when missing.
+switch_to_branch() {
+	local branch="$1" default_branch base local_branch target_path
 	if [[ "$branch" == *"$PENDING_SUFFIX" ]]; then
 		echo "wt: '${branch%"$PENDING_SUFFIX"}' is being deleted" >&2
 		return 1
@@ -345,8 +354,14 @@ cmd_switch() {
 				default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||' || true)
 				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx main || true)}
 				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx master || true)}
-				git worktree add "$worktree_path" "$branch" 2>/dev/null ||
-					git worktree add -b "$branch" "$worktree_path" "$default_branch" || return 1
+				# New branches start from the latest origin/<default> (or the last fetched one when
+				# offline) and don't track it, so the first push sets up origin/<branch>
+				git worktree add "$worktree_path" "$branch" 2>/dev/null || {
+					git fetch --quiet origin "$default_branch" || echo "wt: fetch failed, branching from last known origin/$default_branch" >&2
+					base="origin/$default_branch"
+					git rev-parse --verify --quiet "$base^{commit}" >/dev/null || base=$default_branch
+					git worktree add --no-track -b "$branch" "$worktree_path" "$base"
+				} || return 1
 			fi
 			target_path="$worktree_path"
 		fi
@@ -363,6 +378,97 @@ cmd_switch() {
 	fi
 }
 
+# GitHub is slow (seconds per call), so `wt issue` keeps a per-repo cache in the git common dir:
+#   issues                     open issues, one "number<TAB>updatedAt<TAB>title<TAB>labels" per line
+#   previews/<n>-<updatedAt>   rendered `gh issue view`, replaced once the issue changes
+
+# fetch_issues refreshes the cached issue list, keeping the old one if GitHub can't be reached
+fetch_issues() {
+	local cache
+	cache=$(state_dir issues) || { echo "not a git repository" >&2; return 1; }
+	mkdir -p "${cache%/*}" || return 1
+	if gh issue list --state open --limit 500 --json number,updatedAt,title,labels \
+		--jq '.[] | "\(.number)\t\(.updatedAt)\t\(.title)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
+		mv "$cache.$$" "$cache"
+	else
+		rm -f "$cache.$$"
+		return 1
+	fi
+}
+
+# cmd_issue_lines prints the cached issues for fzf as "number<TAB>updatedAt<TAB>display", those
+# with a <number>-* branch first; with --refresh it fetches them from GitHub first.
+cmd_issue_lines() {
+	[ "${1:-}" = --refresh ] && fetch_issues 2>/dev/null
+	branches="$(cmd_list_branches)" awk -F'\t' '
+		BEGIN {
+			n = split(ENVIRON["branches"], b, "\n")
+			for (i = 1; i <= n; i++) {
+				if (!match(b[i], /^[0-9]+-/)) continue
+				num = substr(b[i], 1, RLENGTH - 1)
+				if (b[i] ~ / \[wt\]$/) mark[num] = " [wt]"
+				else if (!(num in mark)) mark[num] = " [br]"
+			}
+		}
+		$1 !~ /^[0-9]+$/ { next }
+		{
+			line = $1 "\t" $2 "\t#" $1 (($1 in mark) ? mark[$1] : "") "  " $3 ($4 != "" ? "  \033[2m[" $4 "]\033[0m" : "")
+			if ($1 in mark) print line; else rest[r++] = line
+		}
+		END { for (i = 0; i < r; i++) print rest[i] }
+	' "$(state_dir issues)"
+}
+
+# cmd_issue_preview prints an issue as `gh issue view` renders it, cached until its updatedAt
+# changes. Renders cut short by fzf killing the preview leave a .<n>.<pid> file, cleared next time.
+cmd_issue_preview() {
+	local n="$1" file dir tmp
+	dir=$(state_dir previews) || return 1
+	file="$dir/$n-$2"
+	if [ ! -s "$file" ]; then
+		mkdir -p "$dir" || return 1
+		rm -f "$dir/.$n".*
+		tmp="$dir/.$n.$$"
+		GH_FORCE_TTY=${FZF_PREVIEW_COLUMNS:-80} GH_PAGER=cat gh issue view "$n" >"$tmp" 2>&1 || { cat "$tmp"; rm -f "$tmp"; return 1; }
+		rm -f "$dir/$n"-*
+		mv "$tmp" "$file"
+	fi
+	cat "$file"
+}
+
+# cmd_issue lists the repo's open GitHub issues (those with a <number>-* branch first) and,
+# for the picked one, offers its existing branches or a new one named in an editable prompt.
+# The cached list shows straight away and is swapped for a fresh one once GitHub answers
+# (load is unbound first so the reload doesn't retrigger it); only a first run waits on GitHub.
+# Errors go to tmux's status line, since the popup closes as soon as this exits.
+cmd_issue() {
+	local err issue n title matches branch new="+ new branch"
+	if [ ! -s "$(state_dir issues)" ] && ! err=$(fetch_issues 2>&1); then
+		echo "wt: ${err%%$'\n'*}" >&2
+		[ -n "${TMUX:-}" ] && tmux display-message "wt: ${err%%$'\n'*}"
+		return 1
+	fi
+	issue=$(cmd_issue_lines | fzf --ansi --prompt="Issue> " --delimiter='\t' --with-nth=3.. \
+		--bind "load:unbind(load)+reload-sync(\"$SCRIPT_PATH\" --issue-lines --refresh)" \
+		--preview "\"$SCRIPT_PATH\" --issue-preview {1} {2}" \
+		--preview-window 'right,50%,wrap') || return 0
+	n=${issue%%$'\t'*}
+
+	branch=$new
+	matches=$(cmd_list_branches | grep "^$n-" || true)
+	if [ -n "$matches" ]; then
+		branch=$(printf '%s\n%s\n' "$new" "$matches" | fzf --ansi --no-sort --prompt="#$n> ") || return 0
+	fi
+	if [ "$branch" = "$new" ]; then
+		title=$(awk -F'\t' -v n="$n" '$1 == n { print $3; exit }' "$(state_dir issues)")
+		title=$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//' | cut -d- -f1-5 | sed 's/-$//')
+		branch=$(fzf --prompt="New branch> " --info=hidden --query="$n-$title" --bind=enter:print-query </dev/null) || return 0
+		[ -z "$branch" ] && return 0
+		[[ "$branch" == "$n-"* ]] || branch="$n-$branch"
+	fi
+	switch_to_branch "$branch"
+}
+
 # show_help prints the command usage and details
 show_help() {
 	echo "wt - Git Worktree Manager with Tmux integration"
@@ -371,6 +477,7 @@ show_help() {
 	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
 	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
 	echo "                        (runs in the background; several deletions can run at once)"
+	echo "  wt issue            Pick an open GitHub issue and switch to (or create) a <number>-* branch for it"
 	echo "  wt clone <url> [dir] Clone a repository as bare and set up worktrees"
 	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
 	echo "  wt list             List all active worktrees"
@@ -387,6 +494,15 @@ case "${1:-}" in
 	;;
 --header)
 	cmd_header
+	;;
+--issue-lines)
+	cmd_issue_lines "${2:-}"
+	;;
+--issue-preview)
+	cmd_issue_preview "${2:-}" "${3:-}"
+	;;
+issue)
+	cmd_issue
 	;;
 clone)
 	cmd_clone "${2:-}" "${3:-}"
