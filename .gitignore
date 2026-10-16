@@ -18,6 +18,7 @@
 # the hand-written config and the hook scripts settings.json points to.
 /.claude/*
 !/.claude/settings.json
+!/.claude/CLAUDE.md
 !/.claude/notify.sh
 !/.claude/tmux-window-name.sh
 

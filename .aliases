@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Interactive-only. Claude Code's Bash tool sets CLAUDECODE=1 and snapshots
+# these, where `grep -i`, the cd-ing `mkdir` and eza hyperlinks break scripts.
+[[ -n $CLAUDECODE ]] && return
+
 # Easier navigation: .., ..., ...., ....., ~ and -
 alias ..="cd .."
 alias ...="cd ../.."
