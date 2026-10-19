@@ -209,5 +209,9 @@
       "routine under packages/ prefix: dev/build/test/lint work across api-client, api-service, app, admin-ui, airwallex-client, basiq-client, core, frontend, partner-ui treated as routine within this repo"
     ]
   },
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  }
 }
