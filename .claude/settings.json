@@ -175,5 +175,9 @@
   "autoScrollEnabled": true,
   "teammateMode": "tmux",
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  }
 }
