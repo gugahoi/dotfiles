@@ -13,6 +13,7 @@
 #                    - Press [Ctrl-x] inside the selection menu to delete the worktree and branch
 #                      (runs in the background; several deletions can run at once)
 #   wt issue       : Pick an open GitHub issue and switch to (or create) a <number>-* branch for it
+#   wt pr          : Pick an open GitHub pull request and switch to its branch
 #   wt rm | delete : Interactively select a worktree to remove (with a confirmation prompt)
 #   wt list        : List all active worktrees
 #
@@ -378,9 +379,18 @@ switch_to_branch() {
 	fi
 }
 
-# GitHub is slow (seconds per call), so `wt issue` keeps a per-repo cache in the git common dir:
+# GitHub is slow (seconds per call), so `wt issue` and `wt pr` keep a per-repo cache in the git common dir:
 #   issues                     open issues, one "number<TAB>updatedAt<TAB>title<TAB>labels" per line
-#   previews/<n>-<updatedAt>   rendered `gh issue view`, replaced once the issue changes
+#   prs                        open pull requests, one "number<TAB>updatedAt<TAB>isDraft<TAB>isCrossRepository
+#                              <TAB>branch<TAB>title<TAB>author<TAB>labels" per line
+#   previews/<n>-<updatedAt>   rendered `gh issue view` / `gh pr view`, replaced once the issue/PR changes
+#                              (issues and PRs share one number sequence)
+
+# wt_error reports an error on stderr and tmux's status line, since the popup closes as soon as wt exits
+wt_error() {
+	echo "wt: ${1%%$'\n'*}" >&2
+	[ -n "${TMUX:-}" ] && tmux display-message "wt: ${1%%$'\n'*}"
+}
 
 # fetch_issues refreshes the cached issue list, keeping the old one if GitHub can't be reached
 fetch_issues() {
@@ -419,17 +429,18 @@ cmd_issue_lines() {
 	' "$(state_dir issues)"
 }
 
-# cmd_issue_preview prints an issue as `gh issue view` renders it, cached until its updatedAt
+# cmd_preview prints an issue or PR as `gh issue view` / `gh pr view` renders it, cached until its updatedAt
 # changes. Renders cut short by fzf killing the preview leave a .<n>.<pid> file, cleared next time.
-cmd_issue_preview() {
-	local n="$1" file dir tmp
+cmd_preview() {
+	local kind="$1" n="$2" updated="$3" file dir tmp
+	[ "$kind" = issue ] || [ "$kind" = pr ] || return 1
 	dir=$(state_dir previews) || return 1
-	file="$dir/$n-$2"
+	file="$dir/$n-$updated"
 	if [ ! -s "$file" ]; then
 		mkdir -p "$dir" || return 1
 		rm -f "$dir/.$n".*
 		tmp="$dir/.$n.$$"
-		GH_FORCE_TTY=${FZF_PREVIEW_COLUMNS:-80} GH_PAGER=cat gh issue view "$n" >"$tmp" 2>&1 || { cat "$tmp"; rm -f "$tmp"; return 1; }
+		GH_FORCE_TTY=${FZF_PREVIEW_COLUMNS:-80} GH_PAGER=cat gh "$kind" view "$n" >"$tmp" 2>&1 || { cat "$tmp"; rm -f "$tmp"; return 1; }
 		rm -f "$dir/$n"-*
 		mv "$tmp" "$file"
 	fi
@@ -440,17 +451,15 @@ cmd_issue_preview() {
 # for the picked one, offers its existing branches or a new one named in an editable prompt.
 # The cached list shows straight away and is swapped for a fresh one once GitHub answers
 # (load is unbound first so the reload doesn't retrigger it); only a first run waits on GitHub.
-# Errors go to tmux's status line, since the popup closes as soon as this exits.
 cmd_issue() {
 	local err issue n title matches branch new="+ new branch"
 	if [ ! -s "$(state_dir issues)" ] && ! err=$(fetch_issues 2>&1); then
-		echo "wt: ${err%%$'\n'*}" >&2
-		[ -n "${TMUX:-}" ] && tmux display-message "wt: ${err%%$'\n'*}"
+		wt_error "$err"
 		return 1
 	fi
 	issue=$(cmd_issue_lines | fzf --ansi --prompt="Issue> " --delimiter='\t' --with-nth=3.. \
 		--bind "load:unbind(load)+reload-sync(\"$SCRIPT_PATH\" --issue-lines --refresh)" \
-		--preview "\"$SCRIPT_PATH\" --issue-preview {1} {2}" \
+		--preview "\"$SCRIPT_PATH\" --preview issue {1} {2}" \
 		--preview-window 'right,50%,wrap') || return 0
 	n=${issue%%$'\t'*}
 
@@ -469,6 +478,74 @@ cmd_issue() {
 	switch_to_branch "$branch"
 }
 
+# fetch_prs refreshes the cached pull request list - ready for review oldest first, then drafts
+# oldest first - keeping the old one if GitHub can't be reached. PRs from forks are checked out
+# into a local pr-<number> branch, since their head branch doesn't exist on origin.
+fetch_prs() {
+	local cache
+	cache=$(state_dir prs) || { echo "not a git repository" >&2; return 1; }
+	mkdir -p "${cache%/*}" || return 1
+	if gh pr list --state open --limit 500 \
+		--json number,createdAt,updatedAt,isDraft,isCrossRepository,headRefName,title,author,labels \
+		--jq 'sort_by([.isDraft, .createdAt]) | .[] | "\(.number)\t\(.updatedAt)\t\(.isDraft)\t\(.isCrossRepository)\t\(if .isCrossRepository then "pr-\(.number)" else .headRefName end)\t\(.title)\t\(.author.login)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
+		mv "$cache.$$" "$cache"
+	else
+		rm -f "$cache.$$"
+		return 1
+	fi
+}
+
+# cmd_pr_lines prints the cached PRs for fzf as "number<TAB>updatedAt<TAB>display", marking those
+# whose branch has a worktree [wt] or exists locally [br]; with --refresh it fetches them from GitHub first.
+cmd_pr_lines() {
+	[ "${1:-}" = --refresh ] && fetch_prs 2>/dev/null
+	wt_branches="$(git worktree list --porcelain 2>/dev/null | awk '$1 == "branch" { sub("^refs/heads/", "", $2); print $2 }')" \
+	local_branches="$(git branch --format='%(refname:short)' 2>/dev/null)" awk -F'\t' '
+		BEGIN {
+			n = split(ENVIRON["local_branches"], b, "\n")
+			for (i = 1; i <= n; i++) if (b[i] != "") mark[b[i]] = " [br]"
+			n = split(ENVIRON["wt_branches"], b, "\n")
+			for (i = 1; i <= n; i++) if (b[i] != "") mark[b[i]] = " [wt]"
+		}
+		$1 !~ /^[0-9]+$/ { next }
+		{
+			print $1 "\t" $2 "\t#" $1 (($5 in mark) ? mark[$5] : "") ($3 == "true" ? "  \033[33m[draft]\033[0m" : "") "  " $6 \
+				"  \033[2m@" $7 ($8 != "" ? " [" $8 "]" : "") "\033[0m"
+		}
+	' "$(state_dir prs)"
+}
+
+# cmd_pr lists the repo's open pull requests (ready for review, then drafts, each oldest first)
+# and switches to the picked one's branch, fetching it from GitHub when there's no local branch yet.
+# Like `wt issue`, the cached list shows straight away and is swapped for a fresh one once GitHub answers.
+cmd_pr() {
+	local err pr n cross branch
+	if [ ! -s "$(state_dir prs)" ] && ! err=$(fetch_prs 2>&1); then
+		wt_error "$err"
+		return 1
+	fi
+	pr=$(cmd_pr_lines | fzf --ansi --prompt="PR> " --delimiter='\t' --with-nth=3.. \
+		--bind "load:unbind(load)+reload-sync(\"$SCRIPT_PATH\" --pr-lines --refresh)" \
+		--preview "\"$SCRIPT_PATH\" --preview pr {1} {2}" \
+		--preview-window 'right,50%,wrap') || return 0
+	n=${pr%%$'\t'*}
+	IFS=$'\t' read -r cross branch < <(awk -F'\t' -v n="$n" '$1 == n { print $4 "\t" $5; exit }' "$(state_dir prs)")
+	[ -z "${branch:-}" ] && return 0
+
+	if ! git show-ref --verify --quiet "refs/heads/$branch"; then
+		if [ "$cross" = true ]; then
+			err=$(git fetch --quiet origin "+refs/pull/$n/head:refs/heads/$branch" 2>&1)
+		else
+			err=$(git fetch --quiet origin "+refs/heads/$branch:refs/remotes/origin/$branch" 2>&1 &&
+				git branch --quiet --track "$branch" "origin/$branch" 2>&1)
+		fi || {
+			wt_error "failed to fetch PR #$n: ${err:-unknown error}"
+			return 1
+		}
+	fi
+	switch_to_branch "$branch"
+}
+
 # show_help prints the command usage and details
 show_help() {
 	echo "wt - Git Worktree Manager with Tmux integration"
@@ -478,6 +555,7 @@ show_help() {
 	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
 	echo "                        (runs in the background; several deletions can run at once)"
 	echo "  wt issue            Pick an open GitHub issue and switch to (or create) a <number>-* branch for it"
+	echo "  wt pr               Pick an open GitHub pull request (ready first, then drafts; oldest first) and switch to its branch"
 	echo "  wt clone <url> [dir] Clone a repository as bare and set up worktrees"
 	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
 	echo "  wt list             List all active worktrees"
@@ -498,11 +576,17 @@ case "${1:-}" in
 --issue-lines)
 	cmd_issue_lines "${2:-}"
 	;;
---issue-preview)
-	cmd_issue_preview "${2:-}" "${3:-}"
+--pr-lines)
+	cmd_pr_lines "${2:-}"
+	;;
+--preview)
+	cmd_preview "${2:-}" "${3:-}" "${4:-}"
 	;;
 issue)
 	cmd_issue
+	;;
+pr)
+	cmd_pr
 	;;
 clone)
 	cmd_clone "${2:-}" "${3:-}"
