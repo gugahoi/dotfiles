@@ -139,11 +139,31 @@ cmd_delete_bg() {
 	echo "$!" >"$marker"
 }
 
+# default_branch_ref finds the default branch without a network request. Prefer the
+# remote-tracking ref so a stale local main doesn't hide merges already fetched.
+default_branch_ref() {
+	local ref candidate
+	ref=$(git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null || true)
+	for candidate in "$ref" refs/remotes/origin/main refs/remotes/origin/master refs/heads/main refs/heads/master; do
+		[ -n "$candidate" ] || continue
+		if git rev-parse --verify --quiet "$candidate^{commit}" >/dev/null; then
+			printf '%s\n' "$candidate"
+			return 0
+		fi
+	done
+	return 1
+}
+
 # cmd_header prints the fzf header, including the number of in-flight deletions
 cmd_header() {
-	local n
+	local n target
 	n=$(list_pending | grep -c .)
 	printf 'Ctrl-X: Delete branch & worktree'
+	if target=$(default_branch_ref); then
+		target=${target#refs/remotes/}
+		target=${target#refs/heads/}
+		printf '   [merged]: in %s' "$target"
+	fi
 	[ "$n" -gt 0 ] && printf '   ⏳ Deleting %d branch(es)…' "$n"
 	echo
 }
@@ -225,11 +245,14 @@ cmd_delete() {
 	fi
 }
 
-# cmd_list_branches outputs all branches and appends [wt] if they have an active worktree,
-# filtering out the current branch, and sorting active worktrees at the bottom.
+# cmd_list_branches outputs branch/status<TAB>last commit age, marking active worktrees [wt]
+# and filtering out the current branch. Local tips take precedence over remote tips.
 # Branches with a deletion in flight are listed after the worktrees, tagged as deleting.
 cmd_list_branches() {
-	local wt_branches current_branch
+	local wt_branches current_branch target merged_tips=""
+	if target=$(default_branch_ref); then
+		merged_tips=$(git for-each-ref --merged="$target" --format='%(objectname)' refs/heads refs/remotes 2>/dev/null)
+	fi
 	wt_branches=$(git worktree list --porcelain 2>/dev/null | awk '$1 == "branch" { sub("^refs/heads/", "", $2); print $2 }' || true)
 	current_branch=$(git branch --show-current 2>/dev/null || true)
 
@@ -237,7 +260,9 @@ cmd_list_branches() {
 	export current_branch="$current_branch"
 	export pending_list="$(list_pending)"
 	export pending_suffix="$PENDING_SUFFIX"
-	git branch -a --format='%(refname:short)' 2>/dev/null | sed 's|^origin/||' | grep -vx HEAD | sort -u | awk '
+	export merged_list="$merged_tips"
+	git for-each-ref --sort=refname --format='%(refname:short)%09%(committerdate:relative)%09%(objectname)' refs/heads refs/remotes 2>/dev/null |
+		sed 's|^origin/||' | awk -F'\t' '$1 != "HEAD" && !seen[$1]++' | sort | awk -F'\t' '
 		BEGIN {
 			split(ENVIRON["wt_list"], lines, "\n")
 			for (i in lines) {
@@ -251,6 +276,10 @@ cmd_list_branches() {
 					pending[lines[i]] = 1
 				}
 			}
+			split(ENVIRON["merged_list"], lines, "\n")
+			for (i in lines) {
+				if (lines[i] != "") merged[lines[i]] = 1
+			}
 			cur = ENVIRON["current_branch"]
 			suffix = "\033[33m" ENVIRON["pending_suffix"] "\033[0m"
 			wt_count = 0
@@ -258,15 +287,16 @@ cmd_list_branches() {
 			regular_count = 0
 		}
 		{
-			if ($0 == cur || $0 == "") {
+			if ($1 == cur || $1 == "") {
 				next
 			}
-			if ($0 in pending) {
-				pending_lines[pending_count++] = $0 suffix
-			} else if ($0 in wt) {
-				wt_lines[wt_count++] = $0 " [wt]"
+			age = "\t" (($3 in merged) ? "\033[32m[merged]\033[0m  " : "") "\033[2mlast commit: " $2 "\033[0m"
+			if ($1 in pending) {
+				pending_lines[pending_count++] = $1 suffix age
+			} else if ($1 in wt) {
+				wt_lines[wt_count++] = $1 " [wt]" age
 			} else {
-				regular_lines[regular_count++] = $0
+				regular_lines[regular_count++] = $1 age
 			}
 		}
 		END {
@@ -312,7 +342,7 @@ cmd_switch() {
 # to its tmux session, creating the worktree - and the branch, off a freshly fetched
 # origin/<default> - when missing.
 switch_to_branch() {
-	local branch="$1" default_branch base local_branch target_path
+	local branch="${1%%$'\t'*}" default_branch base local_branch target_path
 	if [[ "$branch" == *"$PENDING_SUFFIX" ]]; then
 		echo "wt: '${branch%"$PENDING_SUFFIX"}' is being deleted" >&2
 		return 1
@@ -418,6 +448,7 @@ cmd_issue_lines() {
 			for (i = 1; i <= n; i++) {
 				if (!match(b[i], /^[0-9]+-/)) continue
 				num = substr(b[i], 1, RLENGTH - 1)
+				sub(/\t.*/, "", b[i])
 				if (b[i] ~ / \[wt\]$/) mark[num] = " [wt]"
 				else if (!(num in mark)) mark[num] = " [br]"
 			}
