@@ -49,7 +49,16 @@ rex.action({
 				options = {
 					cwd = p and p.foreground and p.foreground.cwd or nil,
 					path_prepend = { os.getenv("HOME") .. "/.local/bin" },
-					command = { "sh", "-c", reverse_fzf .. keep_failures, "sh", unpack(args.cmd) },
+					-- REX_TARGET_BLOCK: the pane the popup opened over, for scripts that read it (rex-fingers).
+					command = {
+						"sh",
+						"-c",
+						reverse_fzf .. keep_failures,
+						"sh",
+						"env",
+						"REX_TARGET_BLOCK=" .. ctx.block_id,
+						unpack(args.cmd),
+					},
 				},
 			}),
 		})
@@ -62,6 +71,9 @@ rex.bind("alt+f", "popup", { cmd = { "rex-sesh" } }) -- ~/.local/bin/rex-sesh
 -- tmux's M-g/M-i: wt opens the picked worktree in its own Rex session.
 rex.bind("alt+g", "popup", { cmd = { "wt" } })
 rex.bind("alt+i", "popup", { cmd = { "wt", "issue" } })
+-- tmux-fingers (prefix F) and tmux-fzf-url (prefix u, URLs only): ~/.local/bin/rex-fingers.
+rex.bind(P .. "shift+f", "popup", { cmd = { "rex-fingers" } })
+rex.bind(P .. "u", "popup", { cmd = { "rex-fingers", "url" } })
 
 -- prefix e: open this pane's scrollback in $EDITOR, in a new tab.
 rex.action({
