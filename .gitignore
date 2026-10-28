@@ -1,17 +1,9 @@
-.config/pi/auth.json
-.config/pi/extensions/
-
 # TPM and its plugins (installed by install.sh). ~/.tmux is a stow symlink to
 # this repo, so they'd otherwise land here as untracked files.
 .tmux/plugins/
 
 # Editor/tool backup files (e.g. Claude Code's settings.json.bak)
 *.bak
-.config/pi/models-store.json
-/.config/pi/trust.json
-/.config/pi/install
-/.config/pi/bin
-/.config/pi/git
 /.local/
 
 # Claude Code runtime state (sessions, caches, history, plugins...). Track only
@@ -28,10 +20,13 @@
 /.config/gcloud/
 /.config/op/
 /.config/mole/
-/.config/pi/sessions/
 /.config/cliamp/*.log
 /.config/karabiner/automatic_backups/
 # opencode: only the hand-edited config (service.json holds a password)
 /.config/opencode/*
 !/.config/opencode/opencode.jsonc
 !/.config/opencode/cli.json
+# pi: only the hand-edited config (the rest is credentials, history and caches)
+/.config/pi/*
+!/.config/pi/config.yml
+!/.config/pi/keybindings.yml

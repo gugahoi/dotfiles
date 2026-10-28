@@ -1,0 +1,32 @@
+defaultProvider: github-copilot
+defaultModel: gpt-6-sol
+hideThinkingBlock: true
+enabledModels:
+  - github-copilot/claude-opus-5.5
+  - github-copilot/gpt-6-sol
+steeringMode: all
+markdown:
+  mermaid: streaming
+quietStartup: true
+enableInstallTelemetry: false
+defaultProjectTrust: ask
+doubleEscapeAction: tree
+modelThinkingLevels:
+  github-copilot/gpt-6-sol: xhigh
+  github-copilot/claude-opus-5.5: xhigh
+tuiMode: fullscreen
+fullscreenExitOutput: transcript
+fullscreenScrollbar: auto
+packages:
+  - git:github.com/earendil-works/pi-review
+defaultThinkingLevel: xhigh
+defaultTools:
+  - +codemode
+modelRoles:
+  default: github-copilot/gpt-6-astra-1m
+symbolPreset: nerd
+composer:
+  shape: band
+theme:
+  dark: titanium
+setupVersion: 2
