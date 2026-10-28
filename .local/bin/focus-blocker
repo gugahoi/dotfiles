@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # focus-blocker - Redirect distracting domains to 0.0.0.0 in /etc/hosts
 #
@@ -23,6 +23,11 @@
 # to resync. `status` reads world-readable /etc/hosts and needs no sudo.
 
 set -euo pipefail
+
+# sudo keeps the caller's PATH, and Homebrew's bin dir is user-writable, so a
+# PATH lookup as root would run whatever the user put there. Hence the absolute
+# shebang and a fixed system PATH.
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
 # Default to a fixed, root-owned config dir rather than $HOME/.config: under
 # sudo, $HOME is often reset (e.g. to /var/root), so a home-relative path would
