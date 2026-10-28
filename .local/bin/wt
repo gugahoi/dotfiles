@@ -11,7 +11,7 @@
 # Usage:
 #   wt             : Interactively select a branch to switch to (creating worktree if needed)
 #                    - Press [Ctrl-x] inside the selection menu to delete the worktree and branch
-#                      (runs in the background; several deletions can run at once)
+#                      (local deletions run in the background; remote-only entries require confirmation)
 #   wt issue       : Pick an open GitHub issue and switch to (or create) a <number>-* branch for it
 #   wt pr          : Pick an open GitHub pull request and switch to its branch
 #                    - Press [Ctrl-t] inside either picker to switch between issues and pull requests
@@ -45,11 +45,11 @@ delete_branch_and_worktree() {
 
 	# 2. If worktree exists, remove it
 	if [ -n "$worktree_path" ]; then
-		git worktree remove "$worktree_path" >/dev/null 2>&1 || git worktree remove --force "$worktree_path" >/dev/null 2>&1 || true
+		git worktree remove "$worktree_path" 2>/dev/null || git worktree remove --force "$worktree_path" || return 1
 	fi
 
 	# 3. Delete the local branch (allow extra time for packed-refs.lock held by concurrent deletions)
-	git -c core.packedRefsTimeout=5000 branch -D "$branch" >/dev/null 2>&1 || true
+	git -c core.packedRefsTimeout=5000 branch -D "$branch"
 }
 
 # Background deletions keep per-repo state in the git common dir:
@@ -109,10 +109,42 @@ notify_fzf() {
 	done
 }
 
-# cmd_delete_bg starts deleting a branch and its worktree in a detached background
-# process and returns immediately, so several deletions can run concurrently.
+# cmd_delete_selected receives the exact ref from the picker. Local deletion never
+# deletes a remote; remote-only entries require an explicit confirmation first.
+cmd_delete_selected() {
+	local ref="${1:-}" branch="${2:-}" remote_branch choice
+	branch="${branch% \[wt\]}"
+	[[ "$branch" == *"$PENDING_SUFFIX" ]] && return 0
+	case "$ref" in
+	refs/heads/*)
+		cmd_delete_bg "${ref#refs/heads/}"
+		;;
+	refs/remotes/*)
+		remote_branch=${ref#refs/remotes/}
+		choice=$(printf 'Cancel\nDelete remote branch\n' | fzf --height=8 --no-multi --no-sort \
+			--prompt="Remote deletion> " \
+			--header="Delete '$remote_branch' from the remote? This affects everyone.") || return 0
+		[ "$choice" = "Delete remote branch" ] || return 0
+		cmd_delete_bg "$branch" "$ref"
+		;;
+	esac
+}
+
+# delete_remote_branch is only called after confirmation. A failed push must leave
+# the tracking ref intact, so rejected/offline deletions remain visible and retryable.
+delete_remote_branch() {
+	local ref="$1" remote_branch remote branch
+	remote_branch=${ref#refs/remotes/}
+	remote=${remote_branch%%/*}
+	branch=${remote_branch#*/}
+	git push -- "$remote" ":refs/heads/$branch" || return 1
+	git update-ref -d "$ref"
+}
+
+# cmd_delete_bg starts deleting a branch and its worktree (or a confirmed remote
+# branch) in a detached background process, so several deletions can run concurrently.
 cmd_delete_bg() {
-	local branch="${1:-}" dir marker pid
+	local branch="${1:-}" remote_ref="${2:-}" dir marker pid error_file error
 	[ -z "$branch" ] && return 0
 	dir=$(state_dir pending) || return 1
 	mkdir -p "$dir" || return 1
@@ -126,13 +158,21 @@ cmd_delete_bg() {
 		fi
 	fi
 
+	error_file=$(state_dir delete-error) || return 1
+	rm -f "$error_file"
 	echo "$$" >"$marker"
 	# Job control puts the job in its own process group so it isn't killed along with
 	# fzf's child processes; it also ignores hangups/interrupts so it always completes.
 	set -m
 	(
 		trap '' HUP INT TERM
-		delete_branch_and_worktree "$branch"
+		if [ -n "$remote_ref" ]; then
+			if ! error=$(delete_remote_branch "$remote_ref" 2>&1); then
+				printf "Deletion of '%s' failed: %s\n" "$branch" "$error" >"$error_file"
+			fi
+		elif ! error=$(delete_branch_and_worktree "$branch" 2>&1); then
+			printf "Deletion of '%s' failed: %s\n" "$branch" "$error" >"$error_file"
+		fi
 		rm -f "$marker"
 		notify_fzf
 	) </dev/null >/dev/null 2>&1 &
@@ -156,15 +196,19 @@ default_branch_ref() {
 
 # cmd_header prints the fzf header, including the number of in-flight deletions
 cmd_header() {
-	local n target
+	local n target error_file error
 	n=$(list_pending | grep -c .)
-	printf 'Ctrl-X: Delete branch & worktree'
+	printf 'Ctrl-X: Delete local branch/worktree; remote-only: confirm remote deletion'
 	if target=$(default_branch_ref); then
 		target=${target#refs/remotes/}
 		target=${target#refs/heads/}
 		printf '   [merged]: in %s' "$target"
 	fi
 	[ "$n" -gt 0 ] && printf '   ⏳ Deleting %d branch(es)…' "$n"
+	if error_file=$(state_dir delete-error) && [ -s "$error_file" ]; then
+		error=$(<"$error_file")
+		printf '\n⚠ %s' "$error"
+	fi
 	echo
 }
 
@@ -240,13 +284,14 @@ cmd_delete() {
 	echo "Are you sure you want to delete worktree at: $path and branch $branch? (y/N)"
 	read -r response
 	if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-		delete_branch_and_worktree "$branch"
+		delete_branch_and_worktree "$branch" || return 1
 		echo "Worktree and branch removed."
 	fi
 }
 
-# cmd_list_branches outputs branch/status<TAB>last commit age, marking active worktrees [wt]
-# and filtering out the current branch. Local tips take precedence over remote tips.
+# cmd_list_branches outputs branch/status<TAB>metadata<TAB>full ref (hidden in fzf),
+# marking active worktrees [wt] and remote-only entries. Local tips take precedence
+# over origin tips. Symbolic remote HEAD refs and the current branch are omitted.
 # Branches with a deletion in flight are listed after the worktrees, tagged as deleting.
 cmd_list_branches() {
 	local wt_branches current_branch target merged_tips=""
@@ -261,8 +306,16 @@ cmd_list_branches() {
 	export pending_list="$(list_pending)"
 	export pending_suffix="$PENDING_SUFFIX"
 	export merged_list="$merged_tips"
-	git for-each-ref --sort=refname --format='%(refname:short)%09%(committerdate:relative)%09%(objectname)' refs/heads refs/remotes 2>/dev/null |
-		sed 's|^origin/||' | awk -F'\t' '$1 != "HEAD" && !seen[$1]++' | sort | awk -F'\t' '
+	git for-each-ref --sort=refname --format='%(refname)%09%(committerdate:relative)%09%(objectname)%09%(symref)' refs/heads refs/remotes 2>/dev/null |
+		awk -F'\t' '
+			$4 != "" { next }
+			{
+				name = $1
+				if (name ~ /^refs\/heads\//) sub(/^refs\/heads\//, "", name)
+				else sub(/^refs\/remotes\/(origin\/)?/, "", name)
+				if (!seen[name]++) print name "\t" $2 "\t" $3 "\t" $1
+			}
+		' | sort | awk -F'\t' '
 		BEGIN {
 			split(ENVIRON["wt_list"], lines, "\n")
 			for (i in lines) {
@@ -290,7 +343,10 @@ cmd_list_branches() {
 			if ($1 == cur || $1 == "") {
 				next
 			}
-			age = "\t" (($3 in merged) ? "\033[32m[merged]\033[0m  " : "") "\033[2mlast commit: " $2 "\033[0m"
+			remote = $4
+			sub(/^refs\/remotes\//, "", remote)
+			age = "\t" (($4 ~ /^refs\/remotes\//) ? "\033[36m[remote-only: " remote "]\033[0m  " : "") \
+				(($3 in merged) ? "\033[32m[merged]\033[0m  " : "") "\033[2mlast commit: " $2 "\033[0m\t" $4
 			if ($1 in pending) {
 				pending_lines[pending_count++] = $1 suffix age
 			} else if ($1 in wt) {
@@ -326,8 +382,8 @@ cmd_switch() {
 	fi
 	branch=$("$SCRIPT_PATH" --list-branches | fzf --ansi --print-query --prompt="Branch> " \
 		--listen="$sock_dir/fzf.sock" \
-		--header="$(cmd_header)" \
-		--bind "ctrl-x:execute-silent(\"$SCRIPT_PATH\" --delete-branch-bg {1})+reload-sync(\"$SCRIPT_PATH\" --list-branches)" \
+		--header="$(cmd_header)" --delimiter='\t' --with-nth=1,2 \
+		--bind "ctrl-x:execute(\"$SCRIPT_PATH\" --delete-selected {3} {1})+reload-sync(\"$SCRIPT_PATH\" --list-branches)" \
 		--bind "load:transform-header(\"$SCRIPT_PATH\" --header)" | awk '
 		NR == 1 { query = $0; next }
 		{ selected = $0 }
@@ -342,12 +398,25 @@ cmd_switch() {
 # to its tmux session, creating the worktree - and the branch, off a freshly fetched
 # origin/<default> - when missing.
 switch_to_branch() {
-	local branch="${1%%$'\t'*}" default_branch base local_branch target_path
+	local branch="${1%%$'\t'*}" default_branch base local_branch target_path remote_ref="" fields
+	# The hidden ref identifies remote-only selections, including non-origin remotes.
+	if [[ "$1" == *$'\t'*$'\t'* ]]; then
+		fields=${1#*$'\t'}
+		remote_ref=${fields#*$'\t'}
+		case "$remote_ref" in
+		refs/remotes/*) ;;
+		*) remote_ref="" ;;
+		esac
+	fi
 	if [[ "$branch" == *"$PENDING_SUFFIX" ]]; then
 		echo "wt: '${branch%"$PENDING_SUFFIX"}' is being deleted" >&2
 		return 1
 	fi
 	branch="${branch% \[wt\]}"
+	if [ -n "$remote_ref" ]; then
+		branch=${remote_ref#refs/remotes/}
+		branch=${branch#*/}
+	fi
 	[ -z "$branch" ] && return 0
 	git check-ref-format --branch "$branch" >/dev/null 2>&1 || return 1
 	local_branch=$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx "$branch" || true)
@@ -382,6 +451,8 @@ switch_to_branch() {
 			mkdir -p "${worktree_path%/*}" || return 1
 			if [ -n "$local_branch" ]; then
 				git worktree add "$worktree_path" "$branch" || return 1
+			elif [ -n "$remote_ref" ]; then
+				git worktree add --track -b "$branch" "$worktree_path" "$remote_ref" || return 1
 			else
 				default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||' || true)
 				default_branch=${default_branch:-$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx main || true)}
@@ -566,7 +637,7 @@ open_issue() {
 	branch=$new
 	matches=$(cmd_list_branches | grep "^$n-" || true)
 	if [ -n "$matches" ]; then
-		branch=$(printf '%s\n%s\n' "$new" "$matches" | fzf --ansi --no-sort --prompt="#$n> ") || return 0
+		branch=$(printf '%s\n%s\n' "$new" "$matches" | fzf --ansi --no-sort --delimiter='\t' --with-nth=1,2 --prompt="#$n> ") || return 0
 	fi
 	if [ "$branch" = "$new" ]; then
 		title=$(awk -F'\t' -v n="$n" '$1 == n { print $3; exit }' "$(state_dir issues)")
@@ -643,7 +714,7 @@ show_help() {
 	echo "Usage:"
 	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
 	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
-	echo "                        (runs in the background; several deletions can run at once)"
+	echo "                        (local deletions run in the background; remote-only entries require confirmation)"
 	echo "  wt issue            Pick an open GitHub issue and switch to (or create) a <number>-* branch for it"
 	echo "  wt pr               Pick an open GitHub pull request (ready first, then drafts; oldest first) and switch to its branch"
 	echo "                      - Press [Ctrl-t] inside either picker to switch between issues and pull requests"
@@ -660,6 +731,9 @@ case "${1:-}" in
 	;;
 --delete-branch-bg)
 	cmd_delete_bg "${2:-}"
+	;;
+--delete-selected)
+	cmd_delete_selected "${2:-}" "${3:-}"
 	;;
 --header)
 	cmd_header
