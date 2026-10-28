@@ -4,7 +4,12 @@
   },
   "includeCoAuthoredBy": false,
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "auto",
+    "deny": [
+      "Bash(gcloud *)",
+      "Bash(gsutil *)",
+      "Bash(bq *)"
+    ]
   },
   "model": "fable",
   "hooks": {
@@ -100,11 +105,79 @@
             "command": "$HOME/.claude/tmux-agent-state.sh claude end"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/gushoirisch/.dotfiles/.local/share/fnm/node-versions/v24.21.0/installation/bin/node\" --no-warnings \"/Users/gushoirisch/Projects/outstanding-work/main/src/session-hook.ts\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/gushoirisch/.dotfiles/.local/share/fnm/node-versions/v24.21.0/installation/bin/node\" --no-warnings \"/Users/gushoirisch/Projects/outstanding-work/main/src/session-hook.ts\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/gushoirisch/.dotfiles/.local/share/fnm/node-versions/v24.21.0/installation/bin/node\" --no-warnings \"/Users/gushoirisch/Projects/outstanding-work/main/src/session-hook.ts\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/gushoirisch/.dotfiles/.local/share/fnm/node-versions/v24.21.0/installation/bin/node\" --no-warnings \"/Users/gushoirisch/Projects/outstanding-work/main/src/session-hook.ts\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/gushoirisch/.dotfiles/.local/share/fnm/node-versions/v24.21.0/installation/bin/node\" --no-warnings \"/Users/gushoirisch/Projects/outstanding-work/main/src/session-hook.ts\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/gushoirisch/.dotfiles/.local/share/fnm/node-versions/v24.21.0/installation/bin/node\" --no-warnings \"/Users/gushoirisch/Projects/outstanding-work/main/src/session-hook.ts\"",
+            "timeout": 5
+          }
+        ]
       }
     ]
   },
   "worktree": {
     "baseRef": "fresh"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
     "commit-commands@claude-code-plugins": true,
@@ -123,7 +196,8 @@
     "pr-bar@claude-mods": true,
     "handoff-autocomplete@claude-mods": true,
     "playwright@anthropic-plugin-directory": true,
-    "gh-autocomplete@claude-mods": true
+    "gh-autocomplete@claude-mods": true,
+    "gugahoi@flux-skills": true
   },
   "extraKnownMarketplaces": {
     "ponytail": {
@@ -137,6 +211,12 @@
         "source": "github",
         "repo": "gugahoi/claude-mods"
       }
+    },
+    "flux-skills": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/gushoirisch/Projects/skills/master"
+      }
     }
   },
   "feedbackDrafts": "notify",
@@ -147,6 +227,7 @@
       "effortLevel": "xhigh"
     }
   },
+  "advisorModel": "fable",
   "showClearContextOnPlanAccept": true,
   "pluginConfigs": {
     "agents-md@builtin": {
@@ -175,9 +256,5 @@
   "autoScrollEnabled": true,
   "teammateMode": "tmux",
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true,
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline-command.sh"
-  }
+  "voiceEnabled": true
 }
