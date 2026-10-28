@@ -21,6 +21,7 @@ require("mason-lspconfig").setup({
         "bashls",
         "cssmodules_ls",
         "gopls",
+        "jsonls",
         "lua_ls",
         "tsc",
 
