@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 #
-# wt - Git Worktree Manager with Tmux integration
+# wt - Git Worktree Manager with tmux and Rex integration
 #
 # Description:
-#   This script automates Git worktree creation and navigation, pairing it 
-#   with TMUX sessions. It provides an interactive fuzzy search selection (fzf)
-#   for choosing branches and automatically creates worktrees and TMUX sessions 
-#   if they don't already exist.
+#   This script automates Git worktree creation and navigation, pairing each
+#   worktree with a terminal multiplexer session (tmux or Rex). It provides an
+#   interactive fuzzy search selection (fzf) for choosing branches and
+#   automatically creates worktrees and sessions if they don't already exist.
+#   `wt --help` describes how the multiplexer is picked.
 #
 # Usage:
 #   wt             : Interactively select a branch to switch to (creating worktree if needed)
@@ -23,6 +24,9 @@ set -u
 
 # Resolve the absolute path of this script to ensure subprocesses (like fzf reload) can find it
 SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")
+
+# The multiplexer worktrees open in, once mux_preflight has picked and checked it
+MUX=
 
 # delete_branch_and_worktree finds and removes the worktree associated with the branch,
 # and then deletes the local branch itself.
@@ -237,6 +241,7 @@ cmd_clone() {
 		echo "Error: Target directory '$target_dir' already exists." >&2
 		return 1
 	fi
+	mux_preflight || return 1
 
 	echo "Cloning bare repository into '$target_dir/.bare'..."
 	mkdir -p "$target_dir" || return 1
@@ -257,17 +262,7 @@ cmd_clone() {
 
 		echo "Creating first worktree for branch '$primary_branch'..."
 		git worktree add "$primary_branch" || exit 1
-
-		local target_path session_name
-		target_path="$(pwd -P)/$primary_branch"
-		session_name=$(printf '%s' "$primary_branch" | tr '/.:' '___')
-
-		if [ -n "${TMUX:-}" ]; then
-			tmux has-session -t "=$session_name" 2>/dev/null || tmux new-session -d -s "$session_name" -c "$target_path" || exit 1
-			tmux switch-client -t "=$session_name"
-		else
-			tmux new-session -A -s "$session_name" -c "$target_path"
-		fi
+		mux_open_worktree "$(pwd -P)/$primary_branch" "$primary_branch"
 	)
 }
 
@@ -372,6 +367,7 @@ cmd_list_branches() {
 # cmd_switch lists all branches, allowing switching/creating with Ctrl-X keybinding for deletion
 cmd_switch() {
 	local branch sock_dir sessions session_file=""
+	mux_setting || return 1
 	# Ctrl-X spawns a background deletion and returns immediately, so several deletions
 	# can run concurrently. This picker registers its fzf --listen socket so finished
 	# deletions can make it reload; the header is refreshed after every (re)load.
@@ -395,7 +391,7 @@ cmd_switch() {
 }
 
 # switch_to_branch takes a branch picked in fzf (possibly tagged [wt] or deleting) and switches
-# to its tmux session, creating the worktree - and the branch, off a freshly fetched
+# to its multiplexer session, creating the worktree - and the branch, off a freshly fetched
 # origin/<default> - when missing.
 switch_to_branch() {
 	local branch="${1%%$'\t'*}" default_branch base local_branch target_path remote_ref="" fields
@@ -419,6 +415,7 @@ switch_to_branch() {
 	fi
 	[ -z "$branch" ] && return 0
 	git check-ref-format --branch "$branch" >/dev/null 2>&1 || return 1
+	mux_preflight || return 1
 	local_branch=$(git branch --format='%(refname:short)' 2>/dev/null | grep -Fx "$branch" || true)
 
 	local git_common_dir bare_worktree worktree_root worktree_path
@@ -469,16 +466,125 @@ switch_to_branch() {
 			target_path="$worktree_path"
 		fi
 	fi
+	mux_open_worktree "$target_path" "$branch"
+}
 
-	local session_name
-	session_name=$(printf '%s' "$branch" | tr '/.:' '___')
+# WT_MULTIPLEXER picks the terminal multiplexer worktrees open in: tmux, rex, or auto (the default) - tmux
+# inside tmux, Rex inside a live Rex session, and tmux otherwise. Only commands that open a worktree resolve
+# it, so listing, deletion and the fzf helpers need neither tmux, rex nor jq.
 
-	if [ -n "${TMUX:-}" ]; then
-		tmux has-session -t "=$session_name" 2>/dev/null || tmux new-session -d -s "$session_name" -c "$target_path" || return 1
-		tmux switch-client -t "=$session_name"
-	else
-		tmux new-session -A -s "$session_name" -c "$target_path"
+# mux_setting checks WT_MULTIPLEXER, so that a typo fails before any picker shows
+mux_setting() {
+	case ${WT_MULTIPLEXER:-auto} in
+	auto | tmux | rex) ;;
+	*)
+		wt_error "WT_MULTIPLEXER must be auto, tmux or rex, not '$WT_MULTIPLEXER'"
+		return 1
+		;;
+	esac
+}
+
+# mux_preflight picks the multiplexer into MUX and checks it can open a worktree, before wt changes anything.
+# An inherited REX_SESSION can be stale, so it only counts once the server confirms it (without starting a
+# server). A multiplexer that's been picked is never swapped for the other when it fails.
+mux_preflight() {
+	local mux=${WT_MULTIPLEXER:-auto} out
+	[ -n "$MUX" ] && return 0
+	mux_setting || return 1
+	if [ "$mux" = auto ]; then
+		mux=tmux
+		if [ -z "${TMUX:-}" ] && [ -n "${REX_SESSION:-}" ] &&
+			rex --autostart=false whoami --json 2>/dev/null | jq -e .session_id >/dev/null 2>&1; then
+			mux=rex
+		fi
 	fi
+	if [ "$mux" = tmux ]; then
+		command -v tmux >/dev/null || { wt_error "tmux not found"; return 1; }
+	else
+		if ! command -v rex >/dev/null || ! command -v jq >/dev/null; then
+			wt_error "opening worktrees in Rex needs rex and jq"
+			return 1
+		fi
+		out=$(rex --autostart=false client inspect --json 2>&1) || {
+			wt_error "no Rex app to open worktrees in (REX_CLIENT picks one): $out"
+			return 1
+		}
+		jq -e '.actions[] | select(.name == "session.select")' <<<"$out" >/dev/null 2>&1 || {
+			wt_error "the Rex app can't show sessions (no session.select action)"
+			return 1
+		}
+	fi
+	MUX=$mux
+}
+
+# mux_open_worktree opens the worktree at $1, on branch $2, in the multiplexer. The worktree stays when
+# that fails; tmux reports its own errors.
+mux_open_worktree() {
+	local reason
+	mux_preflight || return 1
+	case $MUX in
+	tmux) tmux_open "$1" "$2" ;;
+	rex)
+		reason=$(rex_open "$1" "$2") && return 0
+		wt_error "worktree ready at $1; Rex session could not be opened: $reason"
+		return 1
+		;;
+	esac
+}
+
+# tmux_open switches to (or, outside tmux, attaches) the tmux session named after the branch, creating it
+# in the worktree. Names don't include the repository, so the same branch in two repositories shares one.
+tmux_open() {
+	local session
+	session=$(printf '%s' "$2" | tr '/.:' '___')
+	if [ -n "${TMUX:-}" ]; then
+		tmux has-session -t "=$session" 2>/dev/null || tmux new-session -d -s "$session" -c "$1" || return 1
+		tmux switch-client -t "=$session"
+	else
+		tmux new-session -A -s "$session" -c "$1"
+	fi
+}
+
+# rex_open shows the worktree's Rex session (one per worktree), creating it in the worktree when there's
+# none. Sessions are found by their exact label, so a renamed one is no longer reused. Prints why it failed.
+rex_open() {
+	local path label ids out
+	path=$(cd "$1" && pwd -P) || { echo "can't resolve $1"; return 1; }
+	label=$(rex_label "$path" "$2")
+	ids=$(rex_sessions "$label") || { echo "$ids"; return 1; }
+	if [ -z "$ids" ]; then
+		out=$(rex new "$label" -c "$path" --json 2>&1) && ids=$(jq -r '.session_id // empty' <<<"$out" 2>/dev/null)
+		# rex new may have created the session even though it failed or timed out: look again rather than retry
+		if [ -z "$ids" ]; then
+			ids=$(rex_sessions "$label") || { echo "$ids"; return 1; }
+			[ -n "$ids" ] || { echo "${out:-rex new failed}"; return 1; }
+		fi
+	fi
+	if [[ "$ids" == *$'\n'* ]]; then
+		echo "several sessions are labelled $label: ${ids//$'\n'/, }"
+		return 1
+	fi
+	out=$(rex do session.select session_id="$ids" 2>&1) || { echo "can't show session $ids: $out"; return 1; }
+}
+
+# rex_sessions prints the IDs of the Rex sessions labelled exactly $1, or why they can't be listed
+rex_sessions() {
+	local out
+	out=$(rex ls --json 2>&1) || { echo "$out"; return 1; }
+	jq -r --arg label "$1" '.sessions[] | select(.label == $label) | .session_id' <<<"$out" 2>&1
+}
+
+# rex_label names the Rex session of the worktree at canonical path $1, on branch $2,
+# <repo>-<branch>-<path hash>: the hash tells apart the same branch in two repositories, and is kept
+# whole when a long name is cut to fit Rex's 128-character labels.
+rex_label() {
+	local name hash
+	name=$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+	name=${name%/*}
+	name="${name##*/}-$2"
+	name=${name//[^[:alnum:]._-]/_}
+	hash=$(printf '%s' "$1" | git hash-object --stdin)
+	printf '%s-%s' "${name:0:100}" "${hash:0:10}"
 }
 
 # GitHub is slow (seconds per call), so `wt issue` and `wt pr` keep a per-repo cache in the git common dir:
@@ -607,6 +713,7 @@ cmd_toggle() {
 # (load is unbound first so the reload doesn't retrigger it); only a first run waits on GitHub.
 cmd_github() {
 	local kind="$1" prompt="Issue> " err line n
+	mux_setting || return 1
 	[ "$kind" = pr ] && prompt="PR> "
 	WT_REFRESHED=$(mktemp -d "${TMPDIR:-/tmp}/wt.XXXXXX") || return 1
 	export WT_REFRESHED
@@ -692,6 +799,7 @@ open_pr() {
 	local n="$1" err cross branch
 	IFS=$'\t' read -r cross branch < <(awk -F'\t' -v n="$n" '$1 == n { print $4 "\t" $5; exit }' "$(state_dir prs)")
 	[ -z "${branch:-}" ] && return 0
+	mux_preflight || return 1
 
 	if ! git show-ref --verify --quiet "refs/heads/$branch"; then
 		if [ "$cross" = true ]; then
@@ -709,7 +817,7 @@ open_pr() {
 
 # show_help prints the command usage and details
 show_help() {
-	echo "wt - Git Worktree Manager with Tmux integration"
+	echo "wt - Git Worktree Manager with tmux and Rex integration"
 	echo
 	echo "Usage:"
 	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
@@ -722,6 +830,17 @@ show_help() {
 	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
 	echo "  wt list             List all active worktrees"
 	echo "  wt -h | --help      Show this help documentation"
+	echo
+	echo "Multiplexer (WT_MULTIPLEXER=auto | tmux | rex):"
+	echo "  auto, the default, opens worktrees in tmux inside tmux (\$TMUX), in Rex inside a live Rex session"
+	echo "  (\$REX_SESSION, confirmed with the Rex server), and otherwise in tmux, creating or attaching its session."
+	echo "  tmux inside Rex picks tmux; set WT_MULTIPLEXER=rex for Rex. A picked multiplexer that fails is reported,"
+	echo "  never swapped for the other, and the worktree it was opening is kept."
+	echo "  tmux  One session per branch, named after it; the same branch in two repositories shares one."
+	echo "  Rex   Needs rex and jq (without them, auto picks tmux even inside Rex). One session per worktree,"
+	echo "        labelled <repo>-<branch>-<path hash>; a renamed session is no longer reused."
+	echo "        REX_CLIENT picks the Rex app when several are connected."
+	echo "  Deleting a worktree leaves its session running, and a worktree recreated at the same path reuses it."
 }
 
 # Main command dispatcher
