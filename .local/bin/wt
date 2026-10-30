@@ -590,7 +590,7 @@ rex_label() {
 # GitHub is slow (seconds per call), so `wt issue` and `wt pr` keep a per-repo cache in the git common dir:
 #   issues                     open issues, one "number<TAB>updatedAt<TAB>title<TAB>labels" per line
 #   prs                        open pull requests, one "number<TAB>updatedAt<TAB>isDraft<TAB>isCrossRepository
-#                              <TAB>branch<TAB>title<TAB>author<TAB>labels" per line
+#                              <TAB>branch<TAB>title<TAB>author<TAB>labels<TAB>review<TAB>reReview" per line
 #   previews/<n>-<updatedAt>   rendered `gh issue view` / `gh pr view`, replaced once the issue/PR changes
 #                              (issues and PRs share one number sequence)
 
@@ -614,8 +614,8 @@ fetch_issues() {
 	fi
 }
 
-# cmd_issue_lines prints the cached issues for fzf as "issue<TAB>number<TAB>updatedAt<TAB>display",
-# marking those with a <number>-* branch [wt] or [br].
+# cmd_issue_lines prints the cached issues for fzf as "issue<TAB>number<TAB>updatedAt<TAB>display<TAB>tags",
+# tagging those with a <number>-* branch [wt] or [br].
 cmd_issue_lines() {
 	local cache
 	cache=$(state_dir issues) && [ -f "$cache" ] || return 0
@@ -626,13 +626,14 @@ cmd_issue_lines() {
 				if (!match(b[i], /^[0-9]+-/)) continue
 				num = substr(b[i], 1, RLENGTH - 1)
 				sub(/\t.*/, "", b[i])
-				if (b[i] ~ / \[wt\]$/) mark[num] = " [wt]"
-				else if (!(num in mark)) mark[num] = " [br]"
+				if (b[i] ~ / \[wt\]$/) mark[num] = "[wt]"
+				else if (!(num in mark)) mark[num] = "[br]"
 			}
 		}
 		$1 !~ /^[0-9]+$/ { next }
 		{
-			print "issue\t" $1 "\t" $2 "\t#" $1 (($1 in mark) ? mark[$1] : "") "  " $3 ($4 != "" ? "  \033[2m[" $4 "]\033[0m" : "")
+			display = sprintf("%-300s", "#" $1 "  " $3 ($4 != "" ? "  \033[2m[" $4 "]\033[0m" : ""))
+			print "issue\t" $1 "\t" $2 "\t" display "\t  " (($1 in mark) ? mark[$1] : "")
 		}
 	' "$cache"
 }
@@ -709,6 +710,8 @@ cmd_toggle() {
 # cmd_github lists the repo's open GitHub issues or PRs, Ctrl-T switching between them, and opens the
 # picked one. The cached list shows straight away and is swapped for a fresh one once GitHub answers
 # (load is unbound first so the reload doesn't retrigger it); only a first run waits on GitHub.
+# Tags sit flush right: each line's display is padded to 300 columns, so it always overflows the list
+# and --freeze-right keeps the tags field showing at the edge, cutting the padded title instead.
 cmd_github() {
 	local kind="$1" prompt="Issue> " err line n
 	mux_setting || return 1
@@ -721,7 +724,7 @@ cmd_github() {
 		return 1
 	fi
 	line=$(cmd_lines "$kind" | fzf --ansi --prompt="$prompt" --header="$(picker_header "$kind")" \
-		--delimiter='\t' --with-nth=4.. \
+		--delimiter='\t' --with-nth=4.. --freeze-right=1 --ellipsis='' \
 		--bind "load:unbind(load)+reload-sync(\"$SCRIPT_PATH\" --lines --refresh)" \
 		--bind "ctrl-t:transform(\"$SCRIPT_PATH\" --toggle)" \
 		--preview "\"$SCRIPT_PATH\" --preview {1} {2} {3}" \
@@ -757,13 +760,25 @@ open_issue() {
 # fetch_prs refreshes the cached pull request list - ready for review newest first, then drafts
 # newest first - keeping the old one if GitHub can't be reached. PRs from forks are checked out
 # into a local pr-<number> branch, since their head branch doesn't exist on origin.
+# A PR's review is changes, approved, commented or none, from each reviewer's latest approval or
+# change request, and reReview is whether a reviewer was asked to review again. Only reviewers with
+# write access count, so bots don't. latestReviews leaves out re-requested reviewers, hence reviews.
+# ponytail: gh fetches a PR's first 100 reviews, so later verdicts go unseen past that; use gh api graphql then.
 fetch_prs() {
 	local cache
 	cache=$(state_dir prs) || { echo "not a git repository" >&2; return 1; }
 	mkdir -p "${cache%/*}" || return 1
 	if gh pr list --state open --limit 500 \
-		--json number,createdAt,updatedAt,isDraft,isCrossRepository,headRefName,title,author,labels \
-		--jq 'sort_by(.createdAt) | reverse | map(select(.isDraft | not)) + map(select(.isDraft)) | .[] | "\(.number)\t\(.updatedAt)\t\(.isDraft)\t\(.isCrossRepository)\t\(if .isCrossRepository then "pr-\(.number)" else .headRefName end)\t\(.title)\t\(.author.login)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
+		--json number,createdAt,updatedAt,isDraft,isCrossRepository,headRefName,title,author,labels,reviews,reviewRequests \
+		--jq '
+			def review: .author.login as $author
+				| [.reviews[] | select(.state != "PENDING" and .author.login != $author and
+					(.authorAssociation | IN("OWNER", "MEMBER", "COLLABORATOR")))] as $reviews
+				| ($reviews | reduce (.[] | select(.state != "COMMENTED")) as $r ({}; .[$r.author.login] = $r.state) | [.[]]) as $verdicts
+				| (if IN($verdicts[]; "CHANGES_REQUESTED") then "changes" elif IN($verdicts[]; "APPROVED") then "approved"
+					elif $reviews != [] then "commented" else "none" end)
+				+ "\t" + (any(.reviewRequests[].login; IN($reviews[].author.login)) | tostring);
+			sort_by(.createdAt) | reverse | map(select(.isDraft | not)) + map(select(.isDraft)) | .[] | "\(.number)\t\(.updatedAt)\t\(.isDraft)\t\(.isCrossRepository)\t\(if .isCrossRepository then "pr-\(.number)" else .headRefName end)\t\(.title)\t\(.author.login)\t\(.labels | map(.name) | join(","))\t\(review)"' >"$cache.$$"; then
 		mv "$cache.$$" "$cache"
 	else
 		rm -f "$cache.$$"
@@ -771,8 +786,8 @@ fetch_prs() {
 	fi
 }
 
-# cmd_pr_lines prints the cached PRs for fzf as "pr<TAB>number<TAB>updatedAt<TAB>display", marking
-# those whose branch has a worktree [wt] or exists locally [br].
+# cmd_pr_lines prints the cached PRs for fzf as "pr<TAB>number<TAB>updatedAt<TAB>display<TAB>tags", tagging
+# those whose branch has a worktree [wt] or exists locally [br], and each one's review status, last.
 cmd_pr_lines() {
 	local cache
 	cache=$(state_dir prs) && [ -f "$cache" ] || return 0
@@ -780,14 +795,19 @@ cmd_pr_lines() {
 	local_branches="$(git branch --format='%(refname:short)' 2>/dev/null)" awk -F'\t' '
 		BEGIN {
 			n = split(ENVIRON["local_branches"], b, "\n")
-			for (i = 1; i <= n; i++) if (b[i] != "") mark[b[i]] = " [br]"
+			for (i = 1; i <= n; i++) if (b[i] != "") mark[b[i]] = "[br] "
 			n = split(ENVIRON["wt_branches"], b, "\n")
-			for (i = 1; i <= n; i++) if (b[i] != "") mark[b[i]] = " [wt]"
+			for (i = 1; i <= n; i++) if (b[i] != "") mark[b[i]] = "[wt] "
+			review["approved"] = "\033[32m[approved]\033[0m"
+			review["changes"] = "\033[31m[changes requested]\033[0m"
+			review["commented"] = "\033[36m[commented]\033[0m"
+			review["none"] = "\033[2m[unreviewed]\033[0m"
 		}
 		$1 !~ /^[0-9]+$/ { next }
 		{
-			print "pr\t" $1 "\t" $2 "\t#" $1 (($5 in mark) ? mark[$5] : "") ($3 == "true" ? "  \033[33m[draft]\033[0m" : "") "  " $6 \
-				"  \033[2m@" $7 ($8 != "" ? " [" $8 "]" : "") "\033[0m"
+			display = sprintf("%-300s", "#" $1 "  " $6 "  \033[2m@" $7 ($8 != "" ? " [" $8 "]" : "") "\033[0m")
+			print "pr\t" $1 "\t" $2 "\t" display "\t  " (($5 in mark) ? mark[$5] : "") ($3 == "true" ? "\033[33m[draft]\033[0m " : "") \
+				($10 == "true" ? "\033[35m[re-review]\033[0m " : "") (($9 in review) ? review[$9] : "")
 		}
 	' "$cache"
 }

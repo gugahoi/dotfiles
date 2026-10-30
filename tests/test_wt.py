@@ -283,14 +283,15 @@ class WorktreePickerTests(WtTestCase):
         state = self.repo / ".git/wt-state"
         state.mkdir(exist_ok=True)
         (state / "issues").write_text("123\t2026-01-01\tTest issue\t\n")
-        self.assertIn("#123 [wt]", self.shell("cmd_issue_lines"))
+        self.assertEqual(self.shell("cmd_issue_lines").split("\t")[4].strip(), "[wt]")
 
     def test_issues_and_prs_are_newest_first(self):
         self.git("branch", "1-old")  # a branch no longer lifts its issue to the top
         issues = [{"number": n, "createdAt": c, "updatedAt": c, "title": "t", "labels": []}
                   for n, c in ((1, "2026-01-01"), (3, "2026-03-01"), (2, "2026-02-01"))]
         prs = [{"number": n, "createdAt": c, "updatedAt": c, "isDraft": d, "isCrossRepository": False,
-                "headRefName": f"b{n}", "title": "t", "author": {"login": "me"}, "labels": []}
+                "headRefName": f"b{n}", "title": "t", "author": {"login": "me"}, "labels": [],
+                "reviews": [], "reviewRequests": []}
                for n, c, d in ((4, "2026-01-01", False), (5, "2026-02-01", True),
                                (6, "2026-03-01", False), (7, "2026-04-01", True))]
         output = self.shell(
@@ -300,6 +301,41 @@ class WorktreePickerTests(WtTestCase):
             json.dumps(issues), json.dumps(prs),
         )
         self.assertEqual(output.split(), ["3", "2", "1", "6", "4", "7", "5"])
+
+    def test_pr_review_status(self):
+        def pr(n, reviews=(), requested=()):
+            return {"number": n, "createdAt": f"2026-01-0{n}", "updatedAt": "u", "isDraft": False,
+                    "isCrossRepository": False, "headRefName": f"b{n}", "title": "t", "author": {"login": "me"},
+                    "labels": [], "reviewRequests": list(requested),
+                    "reviews": [{"author": {"login": who}, "authorAssociation": role, "state": state}
+                                for who, role, state in reviews]}
+        prs = [
+            pr(1, requested=[{"slug": "org/team"}]),
+            pr(2, [("bot", "NONE", "APPROVED"), ("me", "OWNER", "COMMENTED"), ("you", "MEMBER", "PENDING")]),
+            pr(3, [("a", "MEMBER", "APPROVED"), ("a", "MEMBER", "COMMENTED")]),
+            pr(4, [("a", "MEMBER", "APPROVED"), ("b", "COLLABORATOR", "CHANGES_REQUESTED")],
+               requested=[{"login": "b"}]),
+            pr(5, [("a", "OWNER", "COMMENTED")], requested=[{"login": "c"}]),
+            pr(6, [("a", "MEMBER", "DISMISSED")]),
+            pr(7, [("a", "MEMBER", "CHANGES_REQUESTED"), ("a", "MEMBER", "APPROVED")]),
+            pr(8, [("a", "MEMBER", "APPROVED"), ("a", "MEMBER", "CHANGES_REQUESTED")]),
+        ]
+        output = self.shell(
+            'prs=$1; gh() { jq -r "${@: -1}" <<<"$prs"; }; fetch_prs && cmd_lines pr | cut -f4,5', json.dumps(prs)
+        )
+        # padded, so tags sit flush right
+        self.assertTrue(all(len(line.split("\t")[0]) >= 300 for line in output.splitlines()))
+        rows = [line.split("\t") for line in re.sub(r"\x1b\[[0-9;]*m", "", output).splitlines()]
+        self.assertEqual([(display.rstrip(), tags.strip()) for display, tags in rows], [
+            ("#8  t  @me", "[changes requested]"),
+            ("#7  t  @me", "[approved]"),
+            ("#6  t  @me", "[commented]"),
+            ("#5  t  @me", "[commented]"),
+            ("#4  t  @me", "[re-review] [changes requested]"),
+            ("#3  t  @me", "[approved]"),
+            ("#2  t  @me", "[unreviewed]"),
+            ("#1  t  @me", "[unreviewed]"),
+        ])
 
 
 class TmuxTests(WtTestCase):
