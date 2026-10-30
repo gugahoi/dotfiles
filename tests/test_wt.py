@@ -285,6 +285,22 @@ class WorktreePickerTests(WtTestCase):
         (state / "issues").write_text("123\t2026-01-01\tTest issue\t\n")
         self.assertIn("#123 [wt]", self.shell("cmd_issue_lines"))
 
+    def test_issues_and_prs_are_newest_first(self):
+        self.git("branch", "1-old")  # a branch no longer lifts its issue to the top
+        issues = [{"number": n, "createdAt": c, "updatedAt": c, "title": "t", "labels": []}
+                  for n, c in ((1, "2026-01-01"), (3, "2026-03-01"), (2, "2026-02-01"))]
+        prs = [{"number": n, "createdAt": c, "updatedAt": c, "isDraft": d, "isCrossRepository": False,
+                "headRefName": f"b{n}", "title": "t", "author": {"login": "me"}, "labels": []}
+               for n, c, d in ((4, "2026-01-01", False), (5, "2026-02-01", True),
+                               (6, "2026-03-01", False), (7, "2026-04-01", True))]
+        output = self.shell(
+            'issues=$1 prs=$2\n'
+            'gh() { local json=$prs; [ "$1" = issue ] && json=$issues; jq -r "${@: -1}" <<<"$json"; }\n'
+            'fetch_issues && fetch_prs && { cmd_lines issue; cmd_lines pr; } | cut -f2',
+            json.dumps(issues), json.dumps(prs),
+        )
+        self.assertEqual(output.split(), ["3", "2", "1", "6", "4", "7", "5"])
+
 
 class TmuxTests(WtTestCase):
     """tmux's arguments, as they were before wt supported other multiplexers."""

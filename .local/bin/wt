@@ -600,13 +600,13 @@ wt_error() {
 	[ -n "${TMUX:-}" ] && tmux display-message "wt: ${1%%$'\n'*}"
 }
 
-# fetch_issues refreshes the cached issue list, keeping the old one if GitHub can't be reached
+# fetch_issues refreshes the cached issue list - newest first - keeping the old one if GitHub can't be reached
 fetch_issues() {
 	local cache
 	cache=$(state_dir issues) || { echo "not a git repository" >&2; return 1; }
 	mkdir -p "${cache%/*}" || return 1
-	if gh issue list --state open --limit 500 --json number,updatedAt,title,labels \
-		--jq '.[] | "\(.number)\t\(.updatedAt)\t\(.title)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
+	if gh issue list --state open --limit 500 --json number,createdAt,updatedAt,title,labels \
+		--jq 'sort_by(.createdAt) | reverse | .[] | "\(.number)\t\(.updatedAt)\t\(.title)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
 		mv "$cache.$$" "$cache"
 	else
 		rm -f "$cache.$$"
@@ -615,7 +615,7 @@ fetch_issues() {
 }
 
 # cmd_issue_lines prints the cached issues for fzf as "issue<TAB>number<TAB>updatedAt<TAB>display",
-# those with a <number>-* branch first.
+# marking those with a <number>-* branch [wt] or [br].
 cmd_issue_lines() {
 	local cache
 	cache=$(state_dir issues) && [ -f "$cache" ] || return 0
@@ -632,10 +632,8 @@ cmd_issue_lines() {
 		}
 		$1 !~ /^[0-9]+$/ { next }
 		{
-			line = "issue\t" $1 "\t" $2 "\t#" $1 (($1 in mark) ? mark[$1] : "") "  " $3 ($4 != "" ? "  \033[2m[" $4 "]\033[0m" : "")
-			if ($1 in mark) print line; else rest[r++] = line
+			print "issue\t" $1 "\t" $2 "\t#" $1 (($1 in mark) ? mark[$1] : "") "  " $3 ($4 != "" ? "  \033[2m[" $4 "]\033[0m" : "")
 		}
-		END { for (i = 0; i < r; i++) print rest[i] }
 	' "$cache"
 }
 
@@ -756,8 +754,8 @@ open_issue() {
 	switch_to_branch "$branch"
 }
 
-# fetch_prs refreshes the cached pull request list - ready for review oldest first, then drafts
-# oldest first - keeping the old one if GitHub can't be reached. PRs from forks are checked out
+# fetch_prs refreshes the cached pull request list - ready for review newest first, then drafts
+# newest first - keeping the old one if GitHub can't be reached. PRs from forks are checked out
 # into a local pr-<number> branch, since their head branch doesn't exist on origin.
 fetch_prs() {
 	local cache
@@ -765,7 +763,7 @@ fetch_prs() {
 	mkdir -p "${cache%/*}" || return 1
 	if gh pr list --state open --limit 500 \
 		--json number,createdAt,updatedAt,isDraft,isCrossRepository,headRefName,title,author,labels \
-		--jq 'sort_by([.isDraft, .createdAt]) | .[] | "\(.number)\t\(.updatedAt)\t\(.isDraft)\t\(.isCrossRepository)\t\(if .isCrossRepository then "pr-\(.number)" else .headRefName end)\t\(.title)\t\(.author.login)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
+		--jq 'sort_by(.createdAt) | reverse | map(select(.isDraft | not)) + map(select(.isDraft)) | .[] | "\(.number)\t\(.updatedAt)\t\(.isDraft)\t\(.isCrossRepository)\t\(if .isCrossRepository then "pr-\(.number)" else .headRefName end)\t\(.title)\t\(.author.login)\t\(.labels | map(.name) | join(","))"' >"$cache.$$"; then
 		mv "$cache.$$" "$cache"
 	else
 		rm -f "$cache.$$"
@@ -823,8 +821,8 @@ show_help() {
 	echo "  wt                  Interactively select a branch to switch to (creating worktree if needed)"
 	echo "                      - Press [Ctrl-x] inside the selection menu to delete the worktree and branch"
 	echo "                        (local deletions run in the background; remote-only entries require confirmation)"
-	echo "  wt issue            Pick an open GitHub issue and switch to (or create) a <number>-* branch for it"
-	echo "  wt pr               Pick an open GitHub pull request (ready first, then drafts; oldest first) and switch to its branch"
+	echo "  wt issue            Pick an open GitHub issue (newest first) and switch to (or create) a <number>-* branch for it"
+	echo "  wt pr               Pick an open GitHub pull request (ready first, then drafts; newest first) and switch to its branch"
 	echo "                      - Press [Ctrl-t] inside either picker to switch between issues and pull requests"
 	echo "  wt clone <url> [dir] Clone a repository as bare and set up worktrees"
 	echo "  wt rm | delete      Interactively select a worktree to remove (with a confirmation prompt)"
