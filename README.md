@@ -11,7 +11,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - **pi** - Pi coding agent extensions and config (`.config/pi/`)
 - **.claude** - Claude Code hooks and scripts
 - **focus-blocker** - Sink social-media domains in `/etc/hosts` on the Work Focus
-- **Brewfile** - Homebrew package list
+- **Brewfile** - Homebrew package list (includes [wt](https://github.com/gugahoi/wt), the worktree manager)
 
 ## Installation
 
@@ -104,7 +104,7 @@ dotfiles/
 │   ├── focus-blocker/ # Social-media blocklist for Focus modes
 │   └── pi/            # Pi coding agent config
 │       └── extensions/ # Pi extensions (plan-mode, subagent, etc.)
-├── .local/bin/        # Personal scripts on PATH (focus-blocker, wt, ...)
+├── .local/bin/        # Personal scripts on PATH (focus-blocker, rex-sesh, ...)
 ├── .tmux.conf         # Tmux configuration
 ├── .tmux/scripts/     # Tmux helper scripts (plugins/ is TPM-managed, gitignored)
 ├── .zshrc             # Zsh configuration

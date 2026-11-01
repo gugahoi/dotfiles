@@ -48,6 +48,7 @@ cask "spotify"
 cask "tuna"
 cask "zen"
 
+brew "gugahoi/tap/wt"
 cask "gugahoi/tap/touchy"
 cask "gugahoi/tap/firestore"
 cask "nikitabobko/tap/aerospace"

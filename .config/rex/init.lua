@@ -30,7 +30,7 @@ end
 
 -- display-popup -E: a floating pane, in the focused pane's directory, that closes when its command
 -- exits. There's no status line to show errors on, so a failure (but not Ctrl-C) waits for Enter.
--- The command's shell isn't interactive, so it misses .zshrc's ~/.local/bin (wt, rex-sesh).
+-- The command's shell isn't interactive, so it misses .zshrc's ~/.local/bin (rex-sesh).
 -- fzf pickers in it use the reverse layout: prompt on top, best match under it.
 local reverse_fzf = [[export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --layout=reverse"; ]]
 local keep_failures =
