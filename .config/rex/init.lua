@@ -40,12 +40,19 @@ rex.action({
 	title = "Popup",
 	args = { cmd = "array" },
 	run = function(ctx, args)
+		if args.cmd[1] == "lazygit" then
+			local current = rex.session.describe_block({ block_id = ctx.block_id })
+			if current and current.block.label == "Lazygit" then
+				return -- Don't open another lazygit popup from inside one.
+			end
+		end
 		local p = rex.block.call("com.superlogical.terminal", "process", { block_id = ctx.block_id })
 		local _, err = rex.session.new_layer({
 			bounds = { 0.1, 0.15, 0.8, 0.7 },
 			focus = true,
 			layout = rex.layout.block({
 				flavor = shell,
+				label = args.cmd[1] == "lazygit" and "Lazygit" or nil,
 				options = {
 					cwd = p and p.foreground and p.foreground.cwd or nil,
 					path_prepend = { os.getenv("HOME") .. "/.local/bin" },
