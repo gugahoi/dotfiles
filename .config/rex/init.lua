@@ -68,6 +68,7 @@ rex.action({
 	end,
 })
 rex.bind("alt+f", "popup", { cmd = { "rex-sesh" } }) -- ~/.local/bin/rex-sesh
+rex.bind("cmd+g", "popup", { cmd = { "lazygit" } })
 -- tmux's M-g/M-i: wt opens the picked worktree in its own Rex session.
 rex.bind("alt+g", "popup", { cmd = { "wt" } })
 rex.bind("alt+i", "popup", { cmd = { "wt", "issue" } })
