@@ -17,5 +17,9 @@ export MANPAGER='nvim +Man!';
 
 export ANTHROPIC_MODEL="claude-opus-5-5"
 
-# Set pi coding agent folder to be under ~/.config
+# Set pi coding agent folder to be under ~/.config (pi only: OMP's named
+# profile below makes it ignore PI_CODING_AGENT_DIR)
 export PI_CODING_AGENT_DIR="$HOME/.config/pi"
+
+# Keep OMP config separate from pi: ~/.omp/profiles/main/agent
+export OMP_PROFILE=main
