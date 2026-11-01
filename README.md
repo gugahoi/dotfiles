@@ -108,6 +108,7 @@ dotfiles/
 ├── .tmux.conf         # Tmux configuration
 ├── .tmux/scripts/     # Tmux helper scripts (plugins/ is TPM-managed, gitignored)
 ├── .zshrc             # Zsh configuration
+├── .zshenv            # Sources .exports for every zsh, incl. non-interactive
 ├── .exports           # Env vars (incl. PI_CODING_AGENT_DIR)
 ├── .gitconfig         # Git configuration
 ├── Brewfile           # Homebrew packages
