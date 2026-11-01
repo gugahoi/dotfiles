@@ -91,3 +91,7 @@ ask_claude() {
 	fi
 }
 alias "?"="noglob ask_claude"
+
+alias stayawake='caffeinate -i'
+alias stayon='sudo pmset -a disablesleep 1'
+alias allowsleep='sudo pmset -a disablesleep 0'
