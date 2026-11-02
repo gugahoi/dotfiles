@@ -30,20 +30,22 @@ end
 
 -- display-popup -E: a floating pane, in the focused pane's directory, that closes when its command
 -- exits. There's no status line to show errors on, so a failure (but not Ctrl-C) waits for Enter.
--- The command's shell isn't interactive, so it misses .zshrc's ~/.local/bin (rex-sesh).
+-- The command's shell isn't interactive, so it misses .zshrc's ~/.local/bin and fnm's Node.
 -- fzf pickers in it use the reverse layout: prompt on top, best match under it.
 local reverse_fzf = [[export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --layout=reverse"; ]]
 local keep_failures =
 	[["$@"; s=$?; [ $s = 0 ] || [ $s = 130 ] || { printf '\n[exit %d] Press Enter to close' $s; read -r _; }]]
+local popup_labels = { lazygit = "Lazygit", ["rex-dash"] = "Rex Dash" }
 rex.action({
 	name = "popup",
 	title = "Popup",
 	args = { cmd = "array" },
 	run = function(ctx, args)
-		if args.cmd[1] == "lazygit" then
+		local label = popup_labels[args.cmd[1]]
+		if label then
 			local current = rex.session.describe_block({ block_id = ctx.block_id })
-			if current and current.block.label == "Lazygit" then
-				return -- Don't open another lazygit popup from inside one.
+			if current and current.block.label == label then
+				return -- Don't reopen a popup from inside itself.
 			end
 		end
 		local p = rex.block.call("com.superlogical.terminal", "process", { block_id = ctx.block_id })
@@ -52,10 +54,13 @@ rex.action({
 			focus = true,
 			layout = rex.layout.block({
 				flavor = shell,
-				label = args.cmd[1] == "lazygit" and "Lazygit" or nil,
+				label = label,
 				options = {
 					cwd = p and p.foreground and p.foreground.cwd or nil,
-					path_prepend = { os.getenv("HOME") .. "/.local/bin" },
+					path_prepend = {
+						os.getenv("HOME") .. "/.local/bin",
+						os.getenv("HOME") .. "/.local/share/fnm/aliases/default/bin",
+					},
 					-- REX_TARGET_BLOCK: the pane the popup opened over, for scripts that read it (rex-fingers).
 					command = {
 						"sh",
@@ -76,6 +81,7 @@ rex.action({
 })
 rex.bind("alt+f", "popup", { cmd = { "rex-sesh" } }) -- ~/.local/bin/rex-sesh
 rex.bind("cmd+g", "popup", { cmd = { "lazygit" } })
+rex.bind("cmd+p", "popup", { cmd = { "rex-dash" } })
 -- tmux's M-g/M-i: wt opens the picked worktree in its own Rex session.
 rex.bind("alt+g", "popup", { cmd = { "wt" } })
 rex.bind("alt+i", "popup", { cmd = { "wt", "issue" } })
