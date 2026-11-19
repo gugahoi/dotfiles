@@ -32,9 +32,11 @@ end
 -- exits. There's no status line to show errors on, so a failure (but not Ctrl-C) waits for Enter.
 -- The command's shell isn't interactive, so it misses .zshrc's ~/.local/bin and fnm's Node.
 -- fzf pickers in it use the reverse layout: prompt on top, best match under it.
+-- set -m runs the command as its own job, in the terminal's foreground, so Rex's sidebar shows the
+-- program (its name, icon and title) rather than the sh around it as "bash".
 local reverse_fzf = [[export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --layout=reverse"; ]]
 local keep_failures =
-	[["$@"; s=$?; [ $s = 0 ] || [ $s = 130 ] || { printf '\n[exit %d] Press Enter to close' $s; read -r _; }]]
+	[[set -m; "$@"; s=$?; [ $s = 0 ] || [ $s = 130 ] || { printf '\n[exit %d] Press Enter to close' $s; read -r _; }]]
 local popup_labels = { lazygit = "Lazygit", ["rex-dash"] = "Rex Dash" }
 rex.action({
 	name = "popup",
