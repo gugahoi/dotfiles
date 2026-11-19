@@ -1,215 +1,215 @@
 {
-    "env": {
-        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
-        "CLAUDE_CODE_EXPERIMENTAL_CODE_MODE": "1"
-    },
-    "includeCoAuthoredBy": false,
-    "permissions": {
-        "deny": [
-            "Bash(gcloud *)",
-            "Bash(gsutil *)",
-            "Bash(bq *)"
-        ],
-        "defaultMode": "auto"
-    },
-    "model": "fable",
-    "hooks": {
-        "Notification": [
-            {
-                "matcher": "permission_prompt|elicitation_dialog",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/notify.sh notification"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-agent-state.sh claude notify"
-                    }
-                ]
-            }
-        ],
-        "Stop": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/notify.sh stop"
-                    },
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-window-name.sh sync"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-agent-state.sh claude stop"
-                    }
-                ]
-            }
-        ],
-        "UserPromptSubmit": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "terminal-notifier -remove claude-code"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-agent-state.sh claude prompt"
-                    }
-                ]
-            }
-        ],
-        "SessionStart": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-window-name.sh save"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-agent-state.sh claude start"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'",
-                        "timeout": 5
-                    }
-                ]
-            }
-        ],
-        "SessionEnd": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-window-name.sh restore"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "$HOME/.claude/tmux-agent-state.sh claude end"
-                    }
-                ]
-            }
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
+    "CLAUDE_CODE_EXPERIMENTAL_CODE_MODE": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "deny": [
+      "Bash(gcloud *)",
+      "Bash(gsutil *)",
+      "Bash(bq *)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "fable",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "permission_prompt|elicitation_dialog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/notify.sh\" ] || \"$HOME/.claude/notify.sh\" notification"
+          }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-agent-state.sh\" ] || \"$HOME/.claude/tmux-agent-state.sh\" claude notify"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/notify.sh\" ] || \"$HOME/.claude/notify.sh\" stop"
+          },
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-window-name.sh\" ] || \"$HOME/.claude/tmux-window-name.sh\" sync"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-agent-state.sh\" ] || \"$HOME/.claude/tmux-agent-state.sh\" claude stop"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "terminal-notifier -remove claude-code"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-agent-state.sh\" ] || \"$HOME/.claude/tmux-agent-state.sh\" claude prompt"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-window-name.sh\" ] || \"$HOME/.claude/tmux-window-name.sh\" save"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-agent-state.sh\" ] || \"$HOME/.claude/tmux-agent-state.sh\" claude start"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'rex __internal session-start --agent claude --feature-session-naming=false 2>/dev/null || true'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-window-name.sh\" ] || \"$HOME/.claude/tmux-window-name.sh\" restore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/tmux-agent-state.sh\" ] || \"$HOME/.claude/tmux-agent-state.sh\" claude end"
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "commit-commands@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": true,
+    "pr-review-toolkit@claude-code-plugins": true,
+    "figma@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "ponytail@ponytail": true,
+    "lua-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true,
+    "cc-plugin-you-should-know@builtin": true,
+    "mattpocock-skills@claude-plugins-official": true,
+    "pr-bar@claude-mods": true,
+    "handoff-autocomplete@claude-mods": true,
+    "playwright@anthropic-plugin-directory": true,
+    "gh-autocomplete@claude-mods": true,
+    "gugahoi@flux-skills": true,
+    "bang-picker@claude-mods": true,
+    "simple-english@simple-english": true
+  },
+  "extraKnownMarketplaces": {
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
     },
-    "worktree": {
-        "baseRef": "fresh"
+    "claude-mods": {
+      "source": {
+        "source": "github",
+        "repo": "gugahoi/claude-mods"
+      }
     },
-    "statusLine": {
-        "type": "command",
-        "command": "~/.claude/statusline-command.sh"
+    "flux-skills": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/gushoirisch/Projects/skills/master"
+      }
     },
-    "enabledPlugins": {
-        "commit-commands@claude-code-plugins": true,
-        "feature-dev@claude-code-plugins": true,
-        "typescript-lsp@claude-plugins-official": true,
-        "gopls-lsp@claude-plugins-official": true,
-        "swift-lsp@claude-plugins-official": true,
-        "pr-review-toolkit@claude-code-plugins": true,
-        "figma@claude-plugins-official": true,
-        "frontend-design@claude-plugins-official": true,
-        "ponytail@ponytail": true,
-        "lua-lsp@claude-plugins-official": true,
-        "clangd-lsp@claude-plugins-official": true,
-        "cc-plugin-you-should-know@builtin": true,
-        "mattpocock-skills@claude-plugins-official": true,
-        "pr-bar@claude-mods": true,
-        "handoff-autocomplete@claude-mods": true,
-        "playwright@anthropic-plugin-directory": true,
-        "gh-autocomplete@claude-mods": true,
-        "gugahoi@flux-skills": true,
-        "bang-picker@claude-mods": true,
-        "simple-english@simple-english": true
+    "simple-english": {
+      "source": {
+        "source": "github",
+        "repo": "AminBlg/SimpleEnglish"
+      }
+    }
+  },
+  "feedbackDrafts": "notify",
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "advisorModel": "fable",
+  "showClearContextOnPlanAccept": true,
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
     },
-    "extraKnownMarketplaces": {
-        "ponytail": {
-            "source": {
-                "source": "github",
-                "repo": "DietrichGebert/ponytail"
-            }
-        },
-        "claude-mods": {
-            "source": {
-                "source": "github",
-                "repo": "gugahoi/claude-mods"
-            }
-        },
-        "flux-skills": {
-            "source": {
-                "source": "directory",
-                "path": "/Users/gushoirisch/Projects/skills/master"
-            }
-        },
-        "simple-english": {
-            "source": {
-                "source": "github",
-                "repo": "AminBlg/SimpleEnglish"
-            }
-        }
-    },
-    "feedbackDrafts": "notify",
-    "alwaysThinkingEnabled": true,
-    "effortLevel": "high",
-    "modelSettings": {
-        "claude-opus-5-5": {
-            "effortLevel": "xhigh"
-        }
-    },
-    "advisorModel": "fable",
-    "showClearContextOnPlanAccept": true,
-    "pluginConfigs": {
-        "agents-md@builtin": {
-            "options": {
-                "instructionFiles": "claude-md-or-agents-md"
-            }
-        },
-        "pr-bar@claude-mods": {
-            "options": {
-                "layout": "bar"
-            }
-        }
-    },
-    "autoUpdatesChannel": "latest",
-    "tui": "fullscreen",
-    "voice": {
-        "enabled": false,
-        "mode": "tap"
-    },
-    "skipDangerousModePermissionPrompt": true,
-    "skipWorkflowUsageWarning": true,
-    "theme": "dark",
-    "editorMode": "vim",
-    "preferredNotifChannel": "auto",
-    "autoCompactEnabled": false,
-    "autoScrollEnabled": true,
-    "teammateMode": "tmux",
-    "agentPushNotifEnabled": true,
-    "voiceEnabled": true
+    "pr-bar@claude-mods": {
+      "options": {
+        "layout": "bar"
+      }
+    }
+  },
+  "autoUpdatesChannel": "latest",
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": false,
+    "mode": "tap"
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "editorMode": "vim",
+  "preferredNotifChannel": "auto",
+  "autoCompactEnabled": false,
+  "autoScrollEnabled": true,
+  "teammateMode": "tmux",
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true
 }
