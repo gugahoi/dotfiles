@@ -8,9 +8,18 @@
 [user]
 	name = Gustavo Hoirisch
 	email = 355877+gugahoi@users.noreply.github.com
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIABhhWsji9Zf+ghLu+BLws3Fsw+7BvJ1jl8Y79HYHlv/
 [core]
 	pager = hunk pager
 [interactive]
 	difffilter = delta
 [rerere]
 	enabled = true
+[url "git@github.com:"]
+	pushInsteadOf = https://github.com/
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+[commit]
+	gpgsign = true
