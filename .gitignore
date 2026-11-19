@@ -4,7 +4,11 @@
 
 # Editor/tool backup files (e.g. Claude Code's settings.json.bak)
 *.bak
-/.local/
+/.local/*
+!/.local/bin/
+# generated links (pi installer, rex-dash worktree build)
+/.local/bin/pi
+/.local/bin/rex-dash
 
 # Claude Code runtime state (sessions, caches, history, plugins...). Track only
 # the hand-written config and the hook scripts settings.json points to.
@@ -13,6 +17,7 @@
 !/.claude/CLAUDE.md
 !/.claude/notify.sh
 !/.claude/tmux-window-name.sh
+!/.claude/keybindings.json
 
 # ~/.config app state, caches and credentials (never commit these)
 /.config/1Password/

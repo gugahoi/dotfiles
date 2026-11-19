@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# sesh for Rex: pick a Rex session, sesh config entry or zoxide dir, then switch
+# to it, creating the Rex session first if it doesn't exist.
+set -eo pipefail
+
+rex_sessions=$(rex ls --json | jq -r '.sessions[] | "\(.label)\t\(.session_id)"')
+
+pick=$({ cut -f1 <<<"$rex_sessions"; sesh list -c -z; } | awk 'NF && !seen[$0]++' |
+	fzf --prompt '⚡  ' --preview 'sesh preview {} 2>/dev/null') || exit 0
+
+id=$(awk -F'\t' -v n="$pick" '$1 == n { print $2; exit }' <<<"$rex_sessions")
+if [ -z "$id" ]; then
+	s=$(sesh list -c -z --json | jq -c --arg n "$pick" 'first(.[] | select(.Name == $n))')
+	path=$(jq -r '.Path // empty' <<<"$s")
+	cmd=$(jq -r '.StartupCommand // empty' <<<"$s")
+	new=$(rex new "$pick" -c "${path:-$HOME}" --json)
+	id=$(jq -r .session_id <<<"$new")
+	# Like sesh, type the startup command into the shell so it stays when the command exits.
+	if [ -n "$cmd" ]; then
+		block=$(jq -r '.initial_windows[0].block_ids[0]' <<<"$new")
+		rex send -s "$id" -b "$block" "$cmd" && rex send-key -s "$id" -b "$block" enter
+	fi
+fi
+rex do session.select session_id="$id"
