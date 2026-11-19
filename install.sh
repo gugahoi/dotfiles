@@ -19,9 +19,12 @@ elif [[ -x /usr/local/bin/brew ]]; then
     eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# 2. Everything in the Brewfile (installs stow, among others).
+# 2. Everything in the Brewfile (installs stow, among others). brew bundle
+#    tries every entry and exits 1 if any failed. Record that and go on, so
+#    one broken package does not skip the steps below.
 echo "==> brew bundle"
-brew bundle --file="$DOTFILES_DIR/Brewfile"
+brew_failed=0
+brew bundle --file="$DOTFILES_DIR/Brewfile" || brew_failed=1
 
 # 3. Symlink the dotfiles into $HOME.
 echo "==> stow"
@@ -49,3 +52,9 @@ trap 'rm -rf "$TPM_SOCKET_DIR"' EXIT
 
 echo "==> Done. Restart your shell (or 'exec zsh')."
 echo "    Optional: run 'focus-blocker setup' to enable the Focus blocker (needs sudo)."
+
+if (( brew_failed )); then
+    echo "==> Some Brewfile packages failed to install (see the brew bundle output above)." >&2
+    echo "    Fix or remove them, then re-run ./install.sh." >&2
+    exit 1
+fi
