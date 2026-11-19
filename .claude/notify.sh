@@ -9,13 +9,15 @@
 set -u
 
 input=$(cat)
+# Muted while this file exists: touch ~/.claude/notify.off / rm ~/.claude/notify.off
+[ -e "$HOME/.claude/notify.off" ] && exit 0
 event="${1:-stop}"
 pane="${TMUX_PANE:-}"
 
-# 1. Skip if Ghostty is frontmost AND (not in tmux, or this window is active).
+# 1. Skip if Ghostty or Rex is frontmost AND (not in tmux, or this window is active).
 front=$(lsappinfo info -only bundleid "$(lsappinfo front 2>/dev/null)" 2>/dev/null)
 case "$front" in
-  *com.mitchellh.ghostty*)
+  *com.mitchellh.ghostty*|*com.superlogical.rex*)
     if [ -z "$pane" ]; then
       exit 0
     elif [ "$(tmux display-message -t "$pane" -p '#{window_active}' 2>/dev/null)" = "1" ]; then

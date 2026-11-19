@@ -4,5 +4,8 @@
     "layout": "horizontal",
     "indicators": "status",
     "mode": "auto"
+  },
+  "session": {
+    "thinking": "show"
   }
 }

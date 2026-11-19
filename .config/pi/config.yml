@@ -26,7 +26,13 @@ modelRoles:
   default: github-copilot/gpt-6-astra-1m
 symbolPreset: nerd
 composer:
-  shape: band
+  shape: box
 theme:
   dark: titanium
 setupVersion: 2
+dev:
+  autoqaConsent: granted
+tui:
+  vimMode: true
+  vimModeDisplay: text
+omitThinking: true
