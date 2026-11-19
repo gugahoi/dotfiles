@@ -52,6 +52,7 @@ trap 'rm -rf "$TPM_SOCKET_DIR"' EXIT
 
 echo "==> Done. Restart your shell (or 'exec zsh')."
 echo "    Optional: run 'focus-blocker setup' to enable the Focus blocker (needs sudo)."
+echo "    Optional: run './macos.sh' to apply macOS settings and the Dock apps."
 
 if (( brew_failed )); then
     echo "==> Some Brewfile packages failed to install (see the brew bundle output above)." >&2

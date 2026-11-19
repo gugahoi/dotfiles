@@ -263,6 +263,25 @@ Firefox / Zen can use **DNS over HTTPS**, which bypasses `/etc/hosts`. Under
 *Settings → Privacy & Security → DNS over HTTPS*, set it to **Default** or
 **Off** so lookups go through the system resolver and the block takes effect.
 
+## macOS Settings
+
+`macos.sh` applies the macOS settings and the Dock apps of this Mac with `defaults write`. You can run it again at any time. Run it after `install.sh`:
+
+```bash
+./macos.sh
+```
+
+If an app in the Dock list is not installed, the script skips it. Tap to click, Spaces and dark mode apply only after you log out and log in again.
+
+The script cannot set privacy permissions, for example Accessibility for AeroSpace and Karabiner, or login items. Set these in System Settings.
+
+To find the key for a setting, compare the output of `defaults read` before and after you change it:
+
+1. Run `defaults read > before.txt`.
+2. Change the setting in System Settings.
+3. Run `defaults read > after.txt`.
+4. Run `diff before.txt after.txt`.
+
 ## Notes
 
 - Keep your dotfiles in version control for easy backup and portability
