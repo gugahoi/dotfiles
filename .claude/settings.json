@@ -163,8 +163,8 @@
     },
     "flux-skills": {
       "source": {
-        "source": "directory",
-        "path": "/Users/gushoirisch/Projects/skills/master"
+        "source": "github",
+        "repo": "joinflux/skills"
       }
     },
     "simple-english": {
