@@ -1,19 +1,36 @@
 {
-  "keymaps": {
-    "n": {
-      "label": "adversarial",
-      "on": ["pr"],
-      "command": "claude \"/adversarial-review $REX_DASH_NUMBER\""
+    "keymaps": {
+        "n": {
+            "label": "adversarial",
+            "on": [
+                "pr"
+            ],
+            "command": "claude \"/adversarial-review $REX_DASH_NUMBER\""
+        },
+        "f": {
+            "label": "followup",
+            "on": [
+                "pr"
+            ],
+            "command": "claude \"/followup-review $REX_DASH_NUMBER\""
+        },
+        "F": {
+            "label": "check feedback",
+            "on": [
+                "pr"
+            ],
+            "command": "claude \"Check feedback for this PR $REX_DASH_NUMBER\""
+        },
+        "S": {
+            "label": "kickoff",
+            "on": [
+                "issue"
+            ],
+            "command": "claude \"/kickoff $REX_DASH_NUMBER\""
+        }
     },
-    "f": {
-      "label": "followup",
-      "on": ["pr"],
-      "command": "claude \"/followup-review $REX_DASH_NUMBER\""
-    },
-    "S": {
-      "label": "kickoff",
-      "on": ["issue"],
-      "command": "claude \"/kickoff $REX_DASH_NUMBER\""
-    }
-  }
+    "hide": [
+        "usage",
+        "fleet"
+    ]
 }
