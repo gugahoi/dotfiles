@@ -57,6 +57,7 @@ cask "handy"
 cask "iina"
 cask "karabiner-elements"
 cask "microsoft-outlook"
+cask "microsoft-teams"
 cask "spotify"
 cask "terminal-browser"
 cask "tuna"
@@ -65,6 +66,7 @@ cask "zen"
 cask "zettlr"
 
 brew "gugahoi/tap/wt", trusted: true
+brew "gugahoi/tap/rex-dash", trusted: true
 cask "gugahoi/tap/touchy", trusted: true
 cask "gugahoi/tap/firestore", trusted: true
 cask "anomalyco/tap/opencode-v2", trusted: true
