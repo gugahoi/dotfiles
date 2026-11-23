@@ -31,6 +31,7 @@ local parsers = {
     "json",
     "lua",
     "markdown",
+    "markdown_inline",
     "sql",
     "terraform",
     "tsx",

@@ -52,3 +52,6 @@ require("plugins.picker")
 require("plugins.theme")
 require("plugins.tmux")
 require("plugins.treesitter")
+
+vim.pack.add({ "https://github.com/MeanderingProgrammer/render-markdown.nvim" })
+require("render-markdown").setup({})
